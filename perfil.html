@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Perfil – Pilaris</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="navbar-logo">Pilaris</a>
+  <div class="navbar-links">
+    <a href="index.html">Home</a>
+    <a href="feed.html">Feed</a>
+    <a href="pesquisa.html">Pesquisa</a>
+    <a href="perfil.html" class="active">Perfil</a>
+  </div>
+  <div class="burger" id="burger"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="feed.html">Feed</a>
+  <a href="pesquisa.html">Pesquisa</a>
+  <a href="perfil.html">Perfil</a>
+  <a href="login.html" class="btn btn-outline" id="logoutBtn">Sair</a>
+</div>
+
+<!-- ── PAGE ── -->
+<div class="page-wrap">
+  <div style="max-width: 680px; margin: 0 auto; padding: 36px 20px;">
+
+    <!-- perfil hero -->
+    <div class="card">
+      <div class="perfil-hero" id="perfilHero">
+        <div class="avatar avatar-xl" id="avatarPerfil">U</div>
+        <h2 id="nomePerfil">Usuário</h2>
+        <span class="role-badge clt" id="rolePerfil">CLT</span><br>
+        <p id="descPerfil" style="margin-top: 8px;">Seu resumo aparece aqui.</p>
+
+        <div class="perfil-stats">
+          <div class="stat"><strong id="statPosts">0</strong><span>Posts</span></div>
+          <div class="stat"><strong id="statConn">0</strong><span>Conexões</span></div>
+          <div class="stat"><strong id="statViews">0</strong><span>Visualizações</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- detalhes do perfil (adapta por role) -->
+    <div class="card" style="margin-top: 18px;">
+      <div class="card-body">
+        <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📋 Informações</h5>
+        <ul class="perfil-detail" id="perfilDetalhes">
+          <!-- injetado pelo JS -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- posts do usuário -->
+    <div style="margin-top: 24px;">
+      <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📸 Meus posts</h5>
+      <div id="meusPosts">
+        <p style="color: var(--clr-text-low); text-align:center; padding: 30px 0;">Sem posts ainda.</p>
+      </div>
+    </div>
+
+    <!-- botão sair (desktop) -->
+    <div style="text-align: center; margin-top: 36px;">
+      <button class="btn btn-outline btn-sm" id="logoutBtnDesktop" style="color: var(--clr-danger); border-color: var(--clr-danger);">
+        🚪 Sair da conta
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db }           from './firebaseConfig.js';
+  import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { doc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── navbar scroll ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
+
+  // ── burger ──
+  const burger = document.getElementById('burger');
+  const mMenu  = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
+  mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
+
+  // ── toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ── logout ──
+  async function doLogout() {
+    try {
+      await signOut(auth);
+      showToast('Você saiu da conta.');
+      setTimeout(() => { window.location.href = 'index.html'; }, 1000);
+    } catch(e) { showToast('Erro ao sair.'); }
+  }
+  document.getElementById('logoutBtnDesktop').addEventListener('click', doLogout);
+  document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+  // ── auth ──
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      document.getElementById('nomePerfil').textContent  = 'Visitante';
+      document.getElementById('rolePerfil').textContent  = '—';
+      document.getElementById('perfilDetalhes').innerHTML = '<li><span class="label">Status</span><span class="value">Não logado</span></li>';
+      return;
+    }
+
+    // ── buscar perfil ──
+    const snap = await getDoc(doc(db, 'perfis', user.uid));
+    if (!snap.exists()) return;
+
+    const p = snap.data();
+    const inicial = (p.nome || 'U')[0].toUpperCase();
+
+    document.getElementById('avatarPerfil').textContent = inicial;
+    document.getElementById('nomePerfil').textContent   = p.nome || 'Usuário';
+
+    const badge = document.getElementById('rolePerfil');
+    badge.textContent = p.role;
+    badge.className   = 'role-badge ' + p.role.toLowerCase();
+
+    // ── detalhes adaptativos ──
+    const detalhes = document.getElementById('perfilDetalhes');
+    let html = '';
+
+    // campos comuns
+    html += `<li><span class="label">Email</span><span class="value">${p.email || '—'}</span></li>`;
+    html += `<li><span class="label">Telefone</span><span class="value">${p.telefone || '—'}</span></li>`;
+    html += `<li><span class="label">Papel</span><span class="value"><span class="role-badge ${p.role.toLowerCase()}">${p.role}</span></span></li>`;
+
+    // CLT extras
+    if (p.role === 'CLT') {
+      html += `<li><span class="label">Data de Nascimento</span><span class="value">${formatDate(p.dob) || '—'}</span></li>`;
+      html += `<li><span class="label">Regime</span><span class="value">Carteira Assinada</span></li>`;
+    }
+
+    // PJ extras
+    if (p.role === 'PJ') {
+      html += `<li><span class="label">Tipo</span><span class="value">Pessoa Jurídica</span></li>`;
+      html += `<li><span class="label">CNPJ / CPF</span><span class="value">—</span></li>`;
+    }
+
+    // Empresa extras
+    if (p.role === 'Empresa') {
+      html += `<li><span class="label">Área de Atuação</span><span class="value">${p.area || '—'}</span></li>`;
+      html += `<li><span class="label">Tipo</span><span class="value">Empresa</span></li>`;
+    }
+
+    // criado em
+    const criado = p.criadoEm?.toDate ? p.criadoEm.toDate() : (p.criadoEm ? new Date(p.criadoEm) : null);
+    if (criado) {
+      html += `<li><span class="label">Membro desde</span><span class="value">${criado.toLocaleDateString('pt-BR')}</span></li>`;
+    }
+
+    detalhes.innerHTML = html;
+
+    // ── posts do usuário ──
+    try {
+      const q      = query(collection(db, 'posts'), where('userId', '==', user.uid), orderBy('criadoEm', 'desc'));
+      const posts  = await getDocs(q);
+      const container = document.getElementById('meusPosts');
+
+      document.getElementById('statPosts').textContent = posts.size;
+
+      if (posts.empty) {
+        container.innerHTML = '<p style="color: var(--clr-text-low); text-align:center; padding: 28px 0;">Você ainda não fez posts. <a href="postar.html" style="color: var(--clr-purple); font-weight:600;">Criar agora</a></p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      posts.forEach(d => {
+        const post = d.data();
+        const card = document.createElement('div');
+        card.className = 'card post-card anim-up';
+
+        let mediaHTML = '';
+        if (post.mediaURL) {
+          mediaHTML = post.mediaType === 'video'
+            ? `<div class="post-media-wrap"><video controls playsinline><source src="${post.mediaURL}"></video></div>`
+            : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
+        }
+
+        const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
+        card.innerHTML = `
+          <div class="post-header">
+            <div class="avatar avatar-sm">${inicial}</div>
+            <div class="post-info">
+              <h4>${p.nome}</h4>
+              <span>${criadoEm.toLocaleDateString('pt-BR')}</span>
+            </div>
+          </div>
+          ${post.texto ? `<div class="post-body">${post.texto}</div>` : ''}
+          ${mediaHTML}
+        `;
+        container.appendChild(card);
+      });
+    } catch(e) { console.error(e); }
+  });
+
+  // ── helper formatar data (YYYY-MM-DD → DD/MM/YYYY) ──
+  function formatDate(str) {
+    if (!str) return null;
+    const [y, m, d] = str.split('-');
+    return `${d}/${m}/${y}`;
+  }
+</script>
+</body>
+</html>

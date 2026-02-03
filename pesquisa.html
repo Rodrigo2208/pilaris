@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pesquisa – Pilaris</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="navbar-logo">Pilaris</a>
+  <div class="navbar-links">
+    <a href="index.html">Home</a>
+    <a href="feed.html">Feed</a>
+    <a href="pesquisa.html" class="active">Pesquisa</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+  <div class="burger" id="burger"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="feed.html">Feed</a>
+  <a href="pesquisa.html">Pesquisa</a>
+  <a href="perfil.html">Perfil</a>
+</div>
+
+<!-- ── PAGE ── -->
+<div class="page-wrap">
+  <div style="max-width: 760px; margin: 0 auto; padding: 40px 20px;">
+
+    <!-- título -->
+    <h1 style="font-family: var(--font-head); font-weight: 800; font-size: 1.75rem; color: var(--clr-deep); margin-bottom: 6px;">🔍 Pesquisa</h1>
+    <p style="color: var(--clr-text-low); font-size:.9rem; margin-bottom: 24px;">Encontre empresas ou profissionais com facilidade.</p>
+
+    <!-- search bar -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="Pesquise por nome, área ou habilidade…" oninput="runSearch()" />
+      <button class="filter-toggle-btn" onclick="toggleFilter()">⚙️ Filtros</button>
+    </div>
+
+    <!-- filter drawer -->
+    <div class="filter-drawer" id="filterDrawer">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Tipo</label>
+          <select id="filterRole" onchange="runSearch()">
+            <option value="">Todos</option>
+            <option value="CLT">CLT</option>
+            <option value="PJ">PJ</option>
+            <option value="Empresa">Empresa</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Área</label>
+          <select id="filterArea" onchange="runSearch()">
+            <option value="">Todas</option>
+            <option value="Tecnologia">Tecnologia</option>
+            <option value="Saúde">Saúde</option>
+            <option value="Educação">Educação</option>
+            <option value="Financeiro">Financeiro</option>
+            <option value="Varejo">Varejo</option>
+            <option value="Marketing">Marketing</option>
+            <option value="Logística">Logística</option>
+            <option value="Construção">Construção</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Ordenar por</label>
+          <select id="filterOrd" onchange="runSearch()">
+            <option value="nome">Nome (A→Z)</option>
+            <option value="recente">Mais recente</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top: 14px;" onclick="runSearch()">Pesquisar</button>
+    </div>
+
+    <!-- resultados -->
+    <div id="results">
+      <p style="color: var(--clr-text-low); text-align:center; padding: 36px 0;">Resultados aparecerão aqui.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { db } from './firebaseConfig.js';
+  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── navbar scroll ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
+
+  // ── burger ──
+  const burger = document.getElementById('burger');
+  const mMenu  = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
+  mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
+
+  // ── toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  // ── filtro drawer ──
+  window.toggleFilter = function() {
+    document.getElementById('filterDrawer').classList.toggle('open');
+  };
+
+  // ── cache de perfis ──
+  let allPerfis = [];
+
+  async function fetchPerfis() {
+    if (allPerfis.length) return;
+    const snap = await getDocs(collection(db, 'perfis'));
+    snap.forEach(d => allPerfis.push({ id: d.id, ...d.data() }));
+  }
+
+  // ── busca + filtro ──
+  window.runSearch = async function() {
+    await fetchPerfis();
+
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const role    = document.getElementById('filterRole').value;
+    const area    = document.getElementById('filterArea').value;
+    const ord     = document.getElementById('filterOrd').value;
+
+    let filtered = allPerfis.filter(p => {
+      const matchKw   = !keyword ||
+        (p.nome  && p.nome.toLowerCase().includes(keyword)) ||
+        (p.area  && p.area.toLowerCase().includes(keyword));
+      const matchRole = !role || p.role === role;
+      const matchArea = !area || (p.area && p.area === area);
+      return matchKw && matchRole && matchArea;
+    });
+
+    // ordenar
+    if (ord === 'nome') {
+      filtered.sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+    } else {
+      filtered.sort((a,b) => (b.criadoEm?.toDate?.() || 0) - (a.criadoEm?.toDate?.() || 0));
+    }
+
+    renderResults(filtered);
+  };
+
+  // ── render ──
+  function renderResults(list) {
+    const container = document.getElementById('results');
+    container.innerHTML = '';
+
+    if (!list.length) {
+      container.innerHTML = '<p style="color: var(--clr-text-low); text-align:center; padding: 40px 0;">Nenhum resultado encontrado. 😕</p>';
+      return;
+    }
+
+    list.forEach(p => {
+      const inicial = (p.nome || 'U')[0].toUpperCase();
+      const card = document.createElement('div');
+      card.className = 'card result-card anim-up';
+      card.innerHTML = `
+        <div class="avatar">${inicial}</div>
+        <div class="result-info">
+          <h4>${p.nome || 'Usuário'} <span class="role-badge ${(p.role||'').toLowerCase()}">${p.role||''}</span></h4>
+          <p>${p.area ? '📌 ' + p.area : p.role === 'CLT' || p.role === 'PJ' ? '👤 Profissional' : '🏢 Empresa'} &nbsp;·&nbsp; ${p.email || ''}</p>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="showToast('📨 Mensagem enviada!')">Contato</button>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  // ── carregar ao abrir ──
+  runSearch();
+</script>
+</body>
+</html>

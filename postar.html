@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Novo Post – Pilaris</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="navbar-logo">Pilaris</a>
+  <div class="navbar-links">
+    <a href="index.html">Home</a>
+    <a href="feed.html">Feed</a>
+    <a href="pesquisa.html">Pesquisa</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+  <div class="burger" id="burger"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="feed.html">Feed</a>
+  <a href="pesquisa.html">Pesquisa</a>
+  <a href="perfil.html">Perfil</a>
+</div>
+
+<!-- ── PAGE ── -->
+<div class="form-page" style="padding-top: 90px;">
+  <div class="form-card card" style="max-width: 520px;">
+
+    <div class="card-header">
+      <h1>✏️ Novo Post</h1>
+      <p>Compartilhe uma foto ou vídeo com a comunidade</p>
+    </div>
+
+    <div class="card-body">
+      <form id="formPost" autocomplete="off">
+
+        <!-- tipo de mídia -->
+        <div class="type-tabs">
+          <div class="type-tab active" data-type="foto" onclick="selectType(this)">📷 Foto</div>
+          <div class="type-tab"        data-type="video" onclick="selectType(this)">🎥 Vídeo</div>
+          <div class="type-tab"        data-type="texto" onclick="selectType(this)">📝 Texto</div>
+        </div>
+
+        <!-- upload zona (foto) -->
+        <div id="zonePhoto">
+          <div class="upload-zone" onclick="document.getElementById('filePhoto').click()">
+            <div class="upload-icon">🖼️</div>
+            <p>Clique para selecionar uma foto</p>
+            <p class="upload-sub">JPG, PNG ou WEBP – máx 8 MB</p>
+            <input type="file" id="filePhoto" accept="image/*" onchange="previewPhoto(event)" />
+          </div>
+          <div class="media-preview" id="previewPhoto">
+            <img id="imgPreview" src="" alt="Preview" />
+          </div>
+        </div>
+
+        <!-- upload zona (vídeo) -->
+        <div id="zoneVideo" style="display:none;">
+          <div class="upload-zone" onclick="document.getElementById('fileVideo').click()">
+            <div class="upload-icon">🎬</div>
+            <p>Clique para selecionar um vídeo</p>
+            <p class="upload-sub">MP4 ou WEBM – máx 50 MB</p>
+            <input type="file" id="fileVideo" accept="video/*" onchange="previewVideo(event)" />
+          </div>
+          <div class="media-preview" id="previewVideo">
+            <video id="vidPreview" controls playsinline></video>
+          </div>
+        </div>
+
+        <!-- zona texto puro -->
+        <div id="zoneTexto" style="display:none;"></div>
+
+        <!-- corpo textual -->
+        <div class="form-group" style="margin-top: 18px;">
+          <label>Descrição</label>
+          <textarea id="postTexto" placeholder="Escreva algo sobre este post…"></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">Publicar</button>
+        <a href="feed.html" class="btn btn-ghost" style="width:100%; justify-content:center; margin-top: 6px;">Cancelar</a>
+      </form>
+
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db }           from './firebaseConfig.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { addDoc, collection } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── navbar scroll ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
+
+  // ── burger ──
+  const burger = document.getElementById('burger');
+  const mMenu  = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
+  mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
+
+  // ── toast ──
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  // ── type tabs ──
+  window.selectType = function(tab) {
+    document.querySelectorAll('.type-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const type = tab.dataset.type;
+
+    document.getElementById('zonePhoto').style.display = type === 'foto'  ? '' : 'none';
+    document.getElementById('zoneVideo').style.display = type === 'video' ? '' : 'none';
+    document.getElementById('zoneTexto').style.display = type === 'texto' ? '' : 'none';
+
+    // reset previews
+    document.getElementById('previewPhoto').classList.remove('visible');
+    document.getElementById('previewVideo').classList.remove('visible');
+  };
+
+  // ── photo preview ──
+  window.previewPhoto = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    document.getElementById('imgPreview').src = url;
+    document.getElementById('previewPhoto').classList.add('visible');
+  };
+
+  // ── video preview ──
+  window.previewVideo = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const vid = document.getElementById('vidPreview');
+    vid.src   = url;
+    vid.load();
+    document.getElementById('previewVideo').classList.add('visible');
+  };
+
+  // ── upload imagem para ImgBB ──
+  async function uploadImgBB(file) {
+    const apiKey  = '609de06a58faae929e0c98224957cc60';
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res  = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.success) return data.data.url;
+    throw new Error('Falha ao enviar imagem.');
+  }
+
+  // ── submit ──
+  let currentUser = null;
+  onAuthStateChanged(auth, user => { currentUser = user; });
+
+  const msgDiv = document.getElementById('msg');
+
+  document.getElementById('formPost').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msgDiv.className = 'msg';
+    msgDiv.textContent = '';
+
+    if (!currentUser) {
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Você precisa estar logado.';
+      return;
+    }
+
+    const activeType = document.querySelector('.type-tab.active').dataset.type;
+    const texto      = document.getElementById('postTexto').value.trim();
+
+    // validar: precisa de mídia ou texto
+    const hasPhoto = activeType === 'foto'  && document.getElementById('filePhoto').files[0];
+    const hasVideo = activeType === 'video' && document.getElementById('fileVideo').files[0];
+    if (!hasPhoto && !hasVideo && !texto) {
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Adicione pelo menos uma mídia ou texto.';
+      return;
+    }
+
+    msgDiv.className   = 'msg ok';
+    msgDiv.textContent = 'Enviando…';
+
+    try {
+      let mediaURL  = null;
+      let mediaType = null;
+
+      // ── upload foto ──
+      if (hasPhoto) {
+        mediaURL  = await uploadImgBB(document.getElementById('filePhoto').files[0]);
+        mediaType = 'foto';
+      }
+
+      // ── upload vídeo (usa ImgBB também – suporta vídeos pequenos;
+      //    para vídeos maiores idealmente usar Firebase Storage) ──
+      if (hasVideo) {
+        // Tentativa via ImgBB (funciona para vídeos pequenos)
+        // Fallback: salvar URL de objeto (não persiste entre sessões)
+        const vidFile = document.getElementById('fileVideo').files[0];
+        if (vidFile.size < 32 * 1024 * 1024) {
+          // tenta imgbb
+          try {
+            mediaURL = await uploadImgBB(vidFile);
+          } catch(_) {
+            // fallback: URL temporária
+            mediaURL = URL.createObjectURL(vidFile);
+          }
+        } else {
+          mediaURL = URL.createObjectURL(vidFile);
+        }
+        mediaType = 'video';
+      }
+
+      // ── salvar no Firestore ──
+      await addDoc(collection(db, 'posts'), {
+        userId:   currentUser.uid,
+        texto,
+        mediaURL,
+        mediaType,
+        criadoEm:  new Date()
+      });
+
+      showToast('✅ Post publicado com sucesso!');
+      setTimeout(() => { window.location.href = 'feed.html'; }, 1200);
+
+    } catch(err) {
+      console.error(err);
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Erro ao publicar. Tente novamente.';
+    }
+  });
+</script>
+</body>
+</html>
