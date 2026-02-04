@@ -74,8 +74,17 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { auth } from './firebaseConfig.js';
-  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { auth, db } from './firebaseConfig.js';
+  import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── Check if already logged in ──
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // Already logged in, redirect to feed
+      window.location.href = 'feed.html';
+    }
+  });
 
   // ── Role toggle ──
   window.selectRole = function(btn) {
@@ -114,17 +123,64 @@
     msgDiv.className = 'msg';
     msgDiv.textContent = '';
 
-    const email  = document.getElementById('email').value.trim();
-    const senha  = document.getElementById('senha').value;
+    const email    = document.getElementById('email').value.trim();
+    const senha    = document.getElementById('senha').value;
+    const telefone = document.getElementById('telefone').value.trim();
+    const dob      = document.getElementById('dob').value;
+    const role     = document.querySelector('.role-btn.active').dataset.role;
+
+    // Frontend validation
+    if (telefone.replace(/\D/g,'').length < 10) {
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Telefone inválido. Use formato (XX) XXXXX-XXXX';
+      return;
+    }
+
+    if (role === 'CLT' && !dob) {
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Data de nascimento é obrigatória para CLT.';
+      return;
+    }
 
     try {
-      await signInWithEmailAndPassword(auth, email, senha);
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      
+      // Verify stored data matches
+      const userDoc = await getDoc(doc(db, 'perfis', userCredential.user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        
+        // Validate phone
+        if (userData.telefone !== telefone) {
+          await auth.signOut();
+          msgDiv.className   = 'msg erro';
+          msgDiv.textContent = 'Número de telefone incorreto.';
+          return;
+        }
+
+        // Validate DOB for CLT
+        if (role === 'CLT' && userData.dob && userData.dob !== dob) {
+          await auth.signOut();
+          msgDiv.className   = 'msg erro';
+          msgDiv.textContent = 'Data de nascimento incorreta.';
+          return;
+        }
+      }
+
       msgDiv.className    = 'msg ok';
       msgDiv.textContent  = '✓ Login realizado com sucesso!';
       setTimeout(() => { window.location.href = 'feed.html'; }, 1200);
     } catch (err) {
       msgDiv.className    = 'msg erro';
-      msgDiv.textContent  = err.message;
+      if (err.code === 'auth/wrong-password') {
+        msgDiv.textContent = 'Senha incorreta.';
+      } else if (err.code === 'auth/user-not-found') {
+        msgDiv.textContent = 'Usuário não encontrado.';
+      } else if (err.code === 'auth/invalid-email') {
+        msgDiv.textContent = 'Email inválido.';
+      } else {
+        msgDiv.textContent = 'Erro ao fazer login: ' + err.message;
+      }
     }
   });
 </script>
