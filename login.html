@@ -75,16 +75,8 @@
 
 <script type="module">
   import { auth, db } from './firebaseConfig.js';
-  import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // ── Check if already logged in ──
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // Already logged in, redirect to feed
-      window.location.href = 'feed.html';
-    }
-  });
 
   // ── Role toggle ──
   window.selectRole = function(btn) {
@@ -120,6 +112,7 @@
 
   document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
+    isLoggingIn = true; // Set flag to prevent redirect during login
     msgDiv.className = 'msg';
     msgDiv.textContent = '';
 
@@ -171,6 +164,7 @@
       msgDiv.textContent  = '✓ Login realizado com sucesso!';
       setTimeout(() => { window.location.href = 'feed.html'; }, 1200);
     } catch (err) {
+      isLoggingIn = false;
       msgDiv.className    = 'msg erro';
       if (err.code === 'auth/wrong-password') {
         msgDiv.textContent = 'Senha incorreta.';

@@ -812,6 +812,64 @@ a   { text-decoration: none; color: inherit; }
 .perfil-detail li .label { color: var(--clr-text-low); font-weight: 500; }
 .perfil-detail li .value { color: var(--clr-text);  font-weight: 600; }
 
+/* education/experience sections */
+.perfil-section {
+  margin-top: 18px;
+}
+.perfil-section-title {
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: .92rem;
+  color: var(--clr-deep);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.perfil-item {
+  padding: 12px 14px;
+  background: var(--clr-off-white);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+  border-left: 3px solid var(--clr-purple);
+}
+.perfil-item:last-child { margin-bottom: 0; }
+.perfil-item-title {
+  font-weight: 600;
+  font-size: .88rem;
+  color: var(--clr-deep);
+  margin-bottom: 4px;
+}
+.perfil-item-subtitle {
+  font-size: .8rem;
+  color: var(--clr-text-mid);
+  margin-bottom: 6px;
+}
+.perfil-item-description {
+  font-size: .82rem;
+  color: var(--clr-text-low);
+  line-height: 1.5;
+}
+
+/* skill tags */
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.skill-tag {
+  display: inline-block;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(108,43,217,.08), rgba(155,89,245,.12));
+  border: 1px solid rgba(108,43,217,.2);
+  border-radius: 16px;
+  font-size: .76rem;
+  font-weight: 600;
+  color: var(--clr-purple);
+}
+
 /* ============================================================
    POSTAR (modal-style page)
    ============================================================ */
@@ -1038,6 +1096,19 @@ a   { text-decoration: none; color: inherit; }
   font-size: .85rem;
   color: var(--clr-deep);
   margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.comment-author .author-badge {
+  background: linear-gradient(135deg, var(--clr-purple), var(--clr-violet));
+  color: #fff;
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: .3px;
 }
 .comment-body .comment-text {
   font-size: .88rem;
@@ -1045,10 +1116,43 @@ a   { text-decoration: none; color: inherit; }
   line-height: 1.5;
   word-wrap: break-word;
 }
+.comment-body .comment-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+.comment-body .comment-action-btn {
+  background: none;
+  border: none;
+  font-size: .75rem;
+  color: var(--clr-text-low);
+  cursor: pointer;
+  padding: 2px 0;
+  font-weight: 500;
+  transition: color var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.comment-body .comment-action-btn:hover {
+  color: var(--clr-purple);
+}
+.comment-body .comment-action-btn.liked {
+  color: var(--clr-purple);
+  font-weight: 600;
+}
 .comment-body .comment-time {
   font-size: .73rem;
   color: var(--clr-text-low);
   margin-top: 4px;
+}
+
+/* nested replies */
+.comment-replies {
+  margin-left: 38px;
+  margin-top: 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--clr-border);
 }
 
 .comment-form {

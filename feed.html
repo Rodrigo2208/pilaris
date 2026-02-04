@@ -124,9 +124,9 @@
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { auth, db }       from './firebaseConfig.js';
+  import { auth, db } from './firebaseConfig.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, orderBy, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, orderBy, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   // ── globals ──
   let currentUser = null;
@@ -135,6 +135,7 @@
   let allProfiles = [];
   let currentEditPostId = null;
   let currentReportPostId = null;
+  let currentReplyToComment = null; // {postId, commentIdx}
 
   // ── navbar scroll ──
   const navbar = document.getElementById('navbar');
@@ -241,7 +242,6 @@
       `;
     }).join('');
 
-    // add hover effect
     container.querySelectorAll('.cursor-pointer').forEach(el => {
       el.addEventListener('mouseenter', () => el.style.background = 'var(--clr-off-white)');
       el.addEventListener('mouseleave', () => el.style.background = 'transparent');
@@ -306,7 +306,7 @@
     let mediaHTML = '';
     if (post.mediaURL) {
       mediaHTML = post.mediaType === 'video'
-        ? `<div class="post-media-wrap"><video controls playsinline><source src="${post.mediaURL}"></video></div>`
+        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}">Seu navegador não suporta vídeo.</video></div>`
         : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
     }
 
@@ -347,19 +347,19 @@
       ${post.texto ? `<div class="post-body">${post.texto}</div>` : ''}
       ${mediaHTML}
       <div class="post-actions">
-        <button class="${isLiked ? 'active' : ''}" onclick="toggleLike('${post.id}')">
+        <button class="post-like-btn ${isLiked ? 'active' : ''}" data-post-id="${post.id}" onclick="toggleLike('${post.id}', this)">
           ${isLiked ? '❤️' : '👍'} Curtir
-          ${likes > 0 ? `<span class="post-action-count">${likes}</span>` : ''}
+          <span class="post-action-count">${likes > 0 ? likes : ''}</span>
         </button>
         <button onclick="toggleComments('${post.id}')">💬 Comentar <span class="post-action-count">${comments.length}</span></button>
         <button onclick="sharePost('${post.id}')">↗️ Compartilhar</button>
       </div>
       <div class="comments-section" id="comments-${post.id}" style="display:none;">
         <div id="comments-list-${post.id}">
-          ${renderComments(comments)}
+          ${renderComments(comments, post.id, post.userId)}
         </div>
         <div class="comment-form">
-          <input type="text" id="comment-input-${post.id}" placeholder="Escreva um comentário…" />
+          <input type="text" id="comment-input-${post.id}" placeholder="Escreva um comentário…" onkeypress="if(event.key==='Enter') addComment('${post.id}')" />
           <button onclick="addComment('${post.id}')">Enviar</button>
         </div>
       </div>
@@ -368,23 +368,67 @@
     container.appendChild(postEl);
   }
 
-  // ── render comments ──
-  function renderComments(comments) {
+  // ── render comments with replies ──
+  function renderComments(comments, postId, postAuthorId) {
     if (!comments || !comments.length) return '<p style="font-size:.82rem; color: var(--clr-text-low); padding:8px 0;">Sem comentários ainda.</p>';
     
-    return comments.map(c => {
+    return comments.map((c, idx) => {
       const time = c.criadoEm?.toDate ? c.criadoEm.toDate() : new Date(c.criadoEm);
       const timeAgo = Math.round((Date.now() - time) / 3.6e6);
       const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
       const inicial = (c.autorNome || 'U')[0].toUpperCase();
 
-      return `
+      const commentLikes = c.likes || 0;
+      const commentLikedBy = c.likedBy || [];
+      const isCommentLiked = currentUser && commentLikedBy.includes(currentUser.uid);
+      const isPostAuthor = c.autorId === postAuthorId;
+
+      const replies = c.replies || [];
+
+      let html = `
         <div class="comment-item">
           <div class="avatar avatar-sm">${inicial}</div>
           <div class="comment-body">
-            <div class="comment-author">${c.autorNome || 'Usuário'}</div>
+            <div class="comment-author">
+              ${c.autorNome || 'Usuário'}
+              ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
+            </div>
             <div class="comment-text">${c.texto}</div>
-            <div class="comment-time">${timeLabel}</div>
+            <div class="comment-actions">
+              <button class="comment-action-btn ${isCommentLiked ? 'liked' : ''}" onclick="toggleCommentLike('${postId}', ${idx}, this)">
+                ${isCommentLiked ? '❤️' : '👍'} ${commentLikes > 0 ? commentLikes : 'Curtir'}
+              </button>
+              <button class="comment-action-btn" onclick="replyToComment('${postId}', ${idx})">↩️ Responder</button>
+              <span class="comment-time">${timeLabel}</span>
+            </div>
+            ${replies.length > 0 ? `<div class="comment-replies">${renderReplies(replies, postId, idx, postAuthorId)}</div>` : ''}
+          </div>
+        </div>
+      `;
+
+      return html;
+    }).join('');
+  }
+
+  // ── render replies ──
+  function renderReplies(replies, postId, commentIdx, postAuthorId) {
+    return replies.map((r, rIdx) => {
+      const time = r.criadoEm?.toDate ? r.criadoEm.toDate() : new Date(r.criadoEm);
+      const timeAgo = Math.round((Date.now() - time) / 3.6e6);
+      const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
+      const inicial = (r.autorNome || 'U')[0].toUpperCase();
+      const isPostAuthor = r.autorId === postAuthorId;
+
+      return `
+        <div class="comment-item" style="border:none; padding-bottom:8px; margin-bottom:8px;">
+          <div class="avatar avatar-sm">${inicial}</div>
+          <div class="comment-body">
+            <div class="comment-author">
+              ${r.autorNome || 'Usuário'}
+              ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
+            </div>
+            <div class="comment-text">${r.texto}</div>
+            <span class="comment-time">${timeLabel}</span>
           </div>
         </div>
       `;
@@ -394,22 +438,20 @@
   // ── toggle post menu ──
   window.togglePostMenu = function(postId) {
     const menu = document.getElementById('menu-' + postId);
-    // close all other menus
     document.querySelectorAll('.post-options-menu.open').forEach(m => {
       if (m.id !== 'menu-' + postId) m.classList.remove('open');
     });
     menu.classList.toggle('open');
   };
 
-  // close menus when clicking outside
   document.addEventListener('click', (e) => {
     if (!e.target.closest('.post-options')) {
       document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
     }
   });
 
-  // ── toggle like ──
-  window.toggleLike = async function(postId) {
+  // ── toggle like (NO RELOAD - update DOM directly) ──
+  window.toggleLike = async function(postId, btnElement) {
     if (!currentUser) { showToast('Faça login para curtir'); return; }
 
     try {
@@ -421,25 +463,65 @@
       const isLiked = likedBy.includes(currentUser.uid);
 
       if (isLiked) {
-        // unlike
         await updateDoc(postRef, {
           likes: increment(-1),
-          likedBy: likedBy.filter(uid => uid !== currentUser.uid)
+          likedBy: arrayRemove(currentUser.uid)
         });
+
+        // Update DOM
+        btnElement.classList.remove('active');
+        btnElement.innerHTML = `👍 Curtir <span class="post-action-count">${Math.max(0, (postSnap.data().likes || 0) - 1) || ''}</span>`;
       } else {
-        // like
         await updateDoc(postRef, {
           likes: increment(1),
-          likedBy: [...likedBy, currentUser.uid]
+          likedBy: arrayUnion(currentUser.uid)
         });
-      }
 
-      // reload feed
-      document.getElementById('feedContainer').innerHTML = '';
-      loadFeed();
+        // Update DOM
+        btnElement.classList.add('active');
+        btnElement.innerHTML = `❤️ Curtir <span class="post-action-count">${(postSnap.data().likes || 0) + 1}</span>`;
+      }
     } catch(e) {
       console.error(e);
       showToast('Erro ao curtir');
+    }
+  };
+
+  // ── toggle comment like ──
+  window.toggleCommentLike = async function(postId, commentIdx, btnElement) {
+    if (!currentUser) { showToast('Faça login para curtir'); return; }
+
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+
+      const comments = postSnap.data().comments || [];
+      const comment = comments[commentIdx];
+      const likedBy = comment.likedBy || [];
+      const isLiked = likedBy.includes(currentUser.uid);
+
+      if (isLiked) {
+        comment.likedBy = likedBy.filter(uid => uid !== currentUser.uid);
+        comment.likes = Math.max(0, (comment.likes || 0) - 1);
+      } else {
+        comment.likedBy = [...likedBy, currentUser.uid];
+        comment.likes = (comment.likes || 0) + 1;
+      }
+
+      await updateDoc(postRef, { comments });
+
+      // Update DOM
+      if (isLiked) {
+        btnElement.classList.remove('liked');
+        btnElement.innerHTML = `👍 ${comment.likes > 0 ? comment.likes : 'Curtir'}`;
+      } else {
+        btnElement.classList.add('liked');
+        btnElement.innerHTML = `❤️ ${comment.likes}`;
+      }
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao curtir comentário');
     }
   };
 
@@ -447,6 +529,9 @@
   window.toggleComments = function(postId) {
     const section = document.getElementById('comments-' + postId);
     section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    if (section.style.display === 'block') {
+      document.getElementById('comment-input-' + postId).focus();
+    }
   };
 
   // ── add comment ──
@@ -463,22 +548,64 @@
       if (!postSnap.exists()) return;
 
       const comments = postSnap.data().comments || [];
-      comments.push({
-        autorId: currentUser.uid,
-        autorNome: currentUserProfile?.nome || 'Usuário',
-        texto,
-        criadoEm: new Date()
-      });
+      
+      if (currentReplyToComment && currentReplyToComment.postId === postId) {
+        // Adding reply
+        const parentIdx = currentReplyToComment.commentIdx;
+        if (!comments[parentIdx].replies) comments[parentIdx].replies = [];
+        comments[parentIdx].replies.push({
+          autorId: currentUser.uid,
+          autorNome: currentUserProfile?.nome || 'Usuário',
+          texto,
+          criadoEm: new Date()
+        });
+        currentReplyToComment = null;
+      } else {
+        // Adding top-level comment
+        comments.push({
+          autorId: currentUser.uid,
+          autorNome: currentUserProfile?.nome || 'Usuário',
+          texto,
+          criadoEm: new Date(),
+          likes: 0,
+          likedBy: [],
+          replies: []
+        });
+      }
 
       await updateDoc(postRef, { comments });
 
       input.value = '';
-      document.getElementById('comments-list-' + postId).innerHTML = renderComments(comments);
+      
+      // Re-render comments
+      const post = await getDoc(postRef);
+      const postAuthorId = post.data().userId;
+      document.getElementById('comments-list-' + postId).innerHTML = renderComments(comments, postId, postAuthorId);
+      
+      // Update counter
+      const counterEl = document.querySelector(`[onclick="toggleComments('${postId}')"] .post-action-count`);
+      if (counterEl) counterEl.textContent = comments.length;
+
       showToast('Comentário adicionado!');
     } catch(e) {
       console.error(e);
       showToast('Erro ao comentar');
     }
+  };
+
+  // ── reply to comment ──
+  window.replyToComment = function(postId, commentIdx) {
+    if (!currentUser) { showToast('Faça login para responder'); return; }
+    
+    currentReplyToComment = { postId, commentIdx };
+    const input = document.getElementById('comment-input-' + postId);
+    input.focus();
+    input.placeholder = 'Respondendo ao comentário...';
+    
+    setTimeout(() => {
+      input.placeholder = 'Escreva um comentário…';
+      currentReplyToComment = null;
+    }, 30000);
   };
 
   // ── share post ──
@@ -512,8 +639,13 @@
       await updateDoc(doc(db, 'posts', currentEditPostId), { texto });
       closeModal('modalEditPost');
       showToast('Post editado!');
-      document.getElementById('feedContainer').innerHTML = '';
-      loadFeed();
+      
+      // Update DOM without reload
+      const postEl = document.querySelector(`[data-post-id="${currentEditPostId}"]`);
+      if (postEl) {
+        const bodyEl = postEl.querySelector('.post-body');
+        if (bodyEl) bodyEl.textContent = texto;
+      }
     } catch(e) {
       console.error(e);
       showToast('Erro ao editar');
@@ -527,8 +659,10 @@
     try {
       await deleteDoc(doc(db, 'posts', postId));
       showToast('Post excluído!');
-      document.getElementById('feedContainer').innerHTML = '';
-      loadFeed();
+      
+      // Remove from DOM without reload
+      const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+      if (postEl) postEl.remove();
     } catch(e) {
       console.error(e);
       showToast('Erro ao excluir');

@@ -123,16 +123,8 @@
 
 <script type="module">
   import { auth, db } from './firebaseConfig.js';
-  import { createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { setDoc, doc }                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-  // ── Check if already logged in ──
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // Already logged in, redirect to feed
-      window.location.href = 'feed.html';
-    }
-  });
 
   // ─────────────────────────────────────────
   // Role toggle logic

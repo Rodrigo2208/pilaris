@@ -204,24 +204,27 @@
         mediaType = 'foto';
       }
 
-      // ── upload vídeo (usa ImgBB também – suporta vídeos pequenos;
-      //    para vídeos maiores idealmente usar Firebase Storage) ──
+      // ── upload vídeo ──
       if (hasVideo) {
-        // Tentativa via ImgBB (funciona para vídeos pequenos)
-        // Fallback: salvar URL de objeto (não persiste entre sessões)
         const vidFile = document.getElementById('fileVideo').files[0];
-        if (vidFile.size < 32 * 1024 * 1024) {
-          // tenta imgbb
+        
+        // For videos, we'll use ImgBB only for small videos (under 10MB)
+        // For larger videos, we'd need Firebase Storage or another service
+        if (vidFile.size < 10 * 1024 * 1024) {
           try {
+            // Try ImgBB for small videos
             mediaURL = await uploadImgBB(vidFile);
-          } catch(_) {
-            // fallback: URL temporária
-            mediaURL = URL.createObjectURL(vidFile);
+            mediaType = 'video';
+          } catch(err) {
+            msgDiv.className   = 'msg erro';
+            msgDiv.textContent = 'Vídeo muito grande. Use um vídeo menor (máx 10MB) ou hospede-o externamente.';
+            return;
           }
         } else {
-          mediaURL = URL.createObjectURL(vidFile);
+          msgDiv.className   = 'msg erro';
+          msgDiv.textContent = 'Vídeo muito grande. Use um vídeo menor que 10MB.';
+          return;
         }
-        mediaType = 'video';
       }
 
       // ── salvar no Firestore ──
