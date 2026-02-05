@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feed – Pilaris</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="navbar-logo">Pilaris</a>
+  <div class="navbar-links">
+    <a href="index.html">Home</a>
+    <a href="feed.html" class="active">Feed</a>
+    <a href="perfil.html">Perfil</a>
+  </div>
+  <div class="burger" id="burger"><span></span><span></span><span></span></div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="feed.html">Feed</a>
+  <a href="perfil.html">Perfil</a>
+  <a href="postar.html" class="btn btn-primary">+ Novo post</a>
+</div>
+
+<!-- ── PAGE ── -->
+<div class="page-wrap">
+  <div class="page-inner">
+
+    <!-- ── SIDEBAR ── -->
+    <aside class="sidebar">
+      <!-- mini perfil -->
+      <div class="card">
+        <div class="card-body" style="text-align:center;">
+          <div class="avatar avatar-lg cursor-pointer" id="avatarSidebar" style="margin:0 auto 12px;" onclick="window.location.href='perfil.html'">P</div>
+          <h4 id="nomeSidebar" class="cursor-pointer" onclick="window.location.href='perfil.html'" style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 4px;">Usuário</h4>
+          <span class="role-badge clt" id="badgeSidebar">CLT</span>
+          <div style="margin-top: 14px;">
+            <a href="postar.html" class="btn btn-primary btn-sm" style="width:100%; justify-content:center;">
+              ＋ Criar post
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- search bar integrated -->
+      <div class="card">
+        <div class="card-body">
+          <h5 style="font-family: var(--font-head); font-weight:600; color: var(--clr-deep); margin-bottom: 10px; font-size:.88rem;">🔍 Pesquisar</h5>
+          <input type="text" id="searchInput" placeholder="Buscar pessoas ou empresas..." 
+                 style="width:100%; padding: 10px 14px; border: 1.5px solid var(--clr-border); border-radius: 20px; font-size:.88rem; outline:none;"
+                 oninput="searchProfiles()" />
+          <div id="searchResults" style="margin-top: 10px; max-height: 300px; overflow-y: auto;"></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── MAIN COL ── -->
+    <main class="main-col">
+
+      <!-- caixa rápida de post -->
+      <div class="card post-create-box" style="margin-bottom: 20px;">
+        <div class="avatar avatar-sm" id="avatarQuick">P</div>
+        <input type="text" placeholder="O que está acontecendo?" readonly
+               onclick="window.location.href='postar.html'" style="cursor:pointer;" />
+      </div>
+
+      <!-- feed dinâmico -->
+      <div id="feedContainer">
+        <p style="text-align:center; color: var(--clr-text-low); padding: 40px 0;" id="feedEmpty">Carregando posts…</p>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ── MODALS ── -->
+<!-- Edit Post Modal -->
+<div class="modal-overlay" id="modalEditPost">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Editar Post</h3>
+      <button class="modal-close" onclick="closeModal('modalEditPost')">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="editPostText" style="width:100%; min-height: 100px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.9rem; resize: vertical;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modalEditPost')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditPost()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Post Modal -->
+<div class="modal-overlay" id="modalReport">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚠️ Denunciar Post</h3>
+      <button class="modal-close" onclick="closeModal('modalReport')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo da denúncia:</p>
+      <select id="reportReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
+        <option value="spam">Spam</option>
+        <option value="assedio">Assédio ou bullying</option>
+        <option value="conteudo-inapropriado">Conteúdo inapropriado</option>
+        <option value="desinformacao">Desinformação</option>
+        <option value="violencia">Violência ou ameaça</option>
+        <option value="outro">Outro</option>
+      </select>
+      <textarea id="reportDetails" placeholder="Detalhes adicionais (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modalReport')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitReport()">Enviar denúncia</button>
+    </div>
+  </div>
+</div>
+
+<!-- Report Comment Modal -->
+<div class="modal-overlay" id="modalReportComment">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚠️ Denunciar Comentário</h3>
+      <button class="modal-close" onclick="closeModal('modalReportComment')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo da denúncia:</p>
+      <select id="reportCommentReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
+        <option value="spam">Spam</option>
+        <option value="assedio">Assédio ou bullying</option>
+        <option value="conteudo-inapropriado">Conteúdo inapropriado</option>
+        <option value="desinformacao">Desinformação</option>
+        <option value="violencia">Violência ou ameaça</option>
+        <option value="outro">Outro</option>
+      </select>
+      <textarea id="reportCommentDetails" placeholder="Detalhes adicionais (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modalReportComment')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitCommentReport()">Enviar denúncia</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { auth, db } from './firebaseConfig.js';
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, orderBy, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  // ── globals ──
+  let currentUser = null;
+  let currentUserProfile = null;
+  let allPosts = [];
+  let allProfiles = [];
+  let currentEditPostId = null;
+  let currentReportPostId = null;
+  let currentReportComment = null; // {postId, commentIdx}
+  let currentReplyToComment = null; // {postId, commentIdx}
+
+  // ── navbar scroll ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
+
+  // ── burger ──
+  const burger = document.getElementById('burger');
+  const mMenu  = document.getElementById('mobileMenu');
+  burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
+  mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
+
+  // ── toast ──
+  window.showToast = function(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  };
+
+  // ── modal helpers ──
+  window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
+  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+
+  // ── auth + load perfil ──
+  onAuthStateChanged(auth, async (user) => {
+    currentUser = user;
+    if (!user) {
+      document.getElementById('nomeSidebar').textContent = 'Visitante';
+      document.getElementById('badgeSidebar').textContent = '—';
+      loadFeed();
+      return;
+    }
+
+    try {
+      const snap = await getDoc(doc(db, 'perfis', user.uid));
+      if (snap.exists()) {
+        currentUserProfile = snap.data();
+        const p = currentUserProfile;
+        document.getElementById('nomeSidebar').textContent  = p.nome || 'Usuário';
+        const badge = document.getElementById('badgeSidebar');
+        badge.textContent = p.role;
+        badge.className   = 'role-badge ' + p.role.toLowerCase();
+
+        const inicial = (p.nome || 'U')[0].toUpperCase();
+        if (p.fotoURL) {
+          document.getElementById('avatarSidebar').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" />`;
+          document.getElementById('avatarQuick').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" />`;
+        } else {
+          document.getElementById('avatarSidebar').textContent = inicial;
+          document.getElementById('avatarQuick').textContent   = inicial;
+        }
+      }
+    } catch(_) {}
+
+    loadFeed();
+    loadAllProfiles();
+  });
+
+  // ── load all profiles for search ──
+  async function loadAllProfiles() {
+    try {
+      const snap = await getDocs(collection(db, 'perfis'));
+      allProfiles = [];
+      snap.forEach(d => allProfiles.push({ id: d.id, ...d.data() }));
+    } catch(e) { console.error(e); }
+  }
+
+  // ── search profiles ──
+  window.searchProfiles = function() {
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const container = document.getElementById('searchResults');
+    
+    if (!keyword) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const results = allProfiles.filter(p => 
+      (p.nome && p.nome.toLowerCase().includes(keyword)) ||
+      (p.email && p.email.toLowerCase().includes(keyword)) ||
+      (p.area && p.area.toLowerCase().includes(keyword))
+    ).slice(0, 5);
+
+    if (!results.length) {
+      container.innerHTML = '<p style="font-size:.8rem; color: var(--clr-text-low); padding: 8px 0;">Nenhum resultado</p>';
+      return;
+    }
+
+    container.innerHTML = results.map(p => {
+      const inicial = (p.nome || 'U')[0].toUpperCase();
+      const avatarHTML = p.fotoURL 
+        ? `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover;" />`
+        : inicial;
+      
+      return `
+        <div class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${p.uid}'" 
+             style="display:flex; gap:10px; align-items:center; padding: 8px; border-radius: 8px; transition: background .2s; margin-bottom: 4px;">
+          <div class="avatar avatar-sm">${avatarHTML}</div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:600; font-size:.82rem; color: var(--clr-deep); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.nome}</div>
+            <div style="font-size:.72rem; color: var(--clr-text-low);">${p.role}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.cursor-pointer').forEach(el => {
+      el.addEventListener('mouseenter', () => el.style.background = 'var(--clr-off-white)');
+      el.addEventListener('mouseleave', () => el.style.background = 'transparent');
+    });
+  };
+
+  // ── carregar posts ──
+  async function loadFeed() {
+    const container = document.getElementById('feedContainer');
+    const emptyMsg  = document.getElementById('feedEmpty');
+
+    try {
+      const q    = query(collection(db, 'posts'), orderBy('criadoEm', 'desc'));
+      const snap = await getDocs(q);
+
+      if (snap.empty) {
+        emptyMsg.textContent = 'Nenhum post ainda. Seja o primeiro! 🎉';
+        return;
+      }
+
+      emptyMsg.remove();
+      allPosts = [];
+
+      // fetch author profiles
+      const autorCache = {};
+
+      for (const d of snap.docs) {
+        const post = { id: d.id, ...d.data() };
+        allPosts.push(post);
+
+        if (!autorCache[post.userId]) {
+          try {
+            const pSnap = await getDoc(doc(db, 'perfis', post.userId));
+            autorCache[post.userId] = pSnap.exists() ? pSnap.data() : null;
+          } catch(_) { autorCache[post.userId] = null; }
+        }
+
+        renderPost(post, autorCache[post.userId], container);
+      }
+    } catch(err) {
+      console.error(err);
+      emptyMsg.textContent = 'Erro ao carregar o feed. Tente recarregar.';
+    }
+  }
+
+  // ── render single post ──
+  function renderPost(post, autor, container) {
+    const nomeAutor = autor ? autor.nome : 'Usuário';
+    const roleAutor = autor ? autor.role : '';
+    const fotoAutor = autor?.fotoURL;
+    const inicial   = nomeAutor[0].toUpperCase();
+
+    const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
+    const horasAtras = Math.round((Date.now() - criadoEm) / 3.6e6);
+    const timeLabel  = horasAtras < 1 ? 'agora' : horasAtras < 24 ? horasAtras + 'h' : Math.floor(horasAtras/24) + 'd';
+
+    const avatarHTML = fotoAutor
+      ? `<img src="${fotoAutor}" alt="${nomeAutor}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+      : inicial;
+
+    // media
+    let mediaHTML = '';
+    if (post.mediaURL) {
+      mediaHTML = post.mediaType === 'video'
+        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}">Seu navegador não suporta vídeo.</video></div>`
+        : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
+    }
+
+    // likes
+    const likes = post.likes || 0;
+    const likedBy = post.likedBy || [];
+    const isLiked = currentUser && likedBy.includes(currentUser.uid);
+
+    // comments
+    const comments = post.comments || [];
+
+    // owner actions
+    const isOwner = currentUser && post.userId === currentUser.uid;
+
+    const postEl = document.createElement('div');
+    postEl.className = 'card post-card anim-up';
+    postEl.dataset.postId = post.id;
+
+    postEl.innerHTML = `
+      <div class="post-header">
+        <div class="avatar avatar-sm cursor-pointer" onclick="window.location.href='perfil.html?uid=${post.userId}'">${avatarHTML}</div>
+        <div class="post-info" style="flex:1;">
+          <h4 class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${post.userId}'">${nomeAutor} <span class="role-badge ${roleAutor.toLowerCase()}">${roleAutor}</span></h4>
+          <span>${timeLabel}</span>
+        </div>
+        <div class="post-options">
+          <button class="post-options-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
+          <div class="post-options-menu" id="menu-${post.id}">
+            ${isOwner ? `
+              <button onclick="editPost('${post.id}')">✏️ Editar</button>
+              <button class="danger" onclick="deletePost('${post.id}')">🗑️ Excluir</button>
+            ` : `
+              <button onclick="reportPost('${post.id}')">⚠️ Denunciar</button>
+            `}
+          </div>
+        </div>
+      </div>
+      ${post.texto ? `<div class="post-body">${post.texto}</div>` : ''}
+      ${mediaHTML}
+      <div class="post-actions">
+        <button class="post-like-btn ${isLiked ? 'active' : ''}" data-post-id="${post.id}" onclick="toggleLike('${post.id}', this)">
+          ${isLiked ? '❤️' : '👍'} Curtir
+          <span class="post-action-count">${likes > 0 ? likes : ''}</span>
+        </button>
+        <button onclick="toggleComments('${post.id}')">💬 Comentar <span class="post-action-count">${comments.length}</span></button>
+        <button onclick="sharePost('${post.id}')">↗️ Compartilhar</button>
+      </div>
+      <div class="comments-section" id="comments-${post.id}" style="display:none;">
+        <div id="comments-list-${post.id}">
+          ${renderComments(comments, post.id, post.userId)}
+        </div>
+        <div class="comment-form">
+          <input type="text" id="comment-input-${post.id}" placeholder="Escreva um comentário…" onkeypress="if(event.key==='Enter') addComment('${post.id}')" />
+          <button onclick="addComment('${post.id}')">Enviar</button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(postEl);
+  }
+
+  // ── render comments with replies ──
+  function renderComments(comments, postId, postAuthorId) {
+    if (!comments || !comments.length) return '<p style="font-size:.82rem; color: var(--clr-text-low); padding:8px 0;">Sem comentários ainda.</p>';
+    
+    return comments.map((c, idx) => {
+      const time = c.criadoEm?.toDate ? c.criadoEm.toDate() : new Date(c.criadoEm);
+      const timeAgo = Math.round((Date.now() - time) / 3.6e6);
+      const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
+      const inicial = (c.autorNome || 'U')[0].toUpperCase();
+
+      const commentLikes = c.likes || 0;
+      const commentLikedBy = c.likedBy || [];
+      const isCommentLiked = currentUser && commentLikedBy.includes(currentUser.uid);
+      const isPostAuthor = c.autorId === postAuthorId;
+
+      const replies = c.replies || [];
+
+      let html = `
+        <div class="comment-item">
+          <div class="avatar avatar-sm">${inicial}</div>
+          <div class="comment-body">
+            <div class="comment-author">
+              ${c.autorNome || 'Usuário'}
+              ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
+            </div>
+            <div class="comment-text">${c.texto}</div>
+            <div class="comment-actions">
+              <button class="comment-action-btn ${isCommentLiked ? 'liked' : ''}" onclick="toggleCommentLike('${postId}', ${idx}, this)">
+                ${isCommentLiked ? '❤️' : '👍'} ${commentLikes > 0 ? commentLikes : 'Curtir'}
+              </button>
+              <button class="comment-action-btn" onclick="replyToComment('${postId}', ${idx})">↩️ Responder</button>
+              ${!isPostAuthor && currentUser ? `<button class="comment-action-btn" onclick="reportComment('${postId}', ${idx})">⚠️ Denunciar</button>` : ''}
+              <span class="comment-time">${timeLabel}</span>
+            </div>
+            ${replies.length > 0 ? `<div class="comment-replies">${renderReplies(replies, postId, idx, postAuthorId)}</div>` : ''}
+          </div>
+        </div>
+      `;
+
+      return html;
+    }).join('');
+  }
+
+  // ── render replies ──
+  function renderReplies(replies, postId, commentIdx, postAuthorId) {
+    return replies.map((r, rIdx) => {
+      const time = r.criadoEm?.toDate ? r.criadoEm.toDate() : new Date(r.criadoEm);
+      const timeAgo = Math.round((Date.now() - time) / 3.6e6);
+      const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
+      const inicial = (r.autorNome || 'U')[0].toUpperCase();
+      const isPostAuthor = r.autorId === postAuthorId;
+
+      return `
+        <div class="comment-item" style="border:none; padding-bottom:8px; margin-bottom:8px;">
+          <div class="avatar avatar-sm">${inicial}</div>
+          <div class="comment-body">
+            <div class="comment-author">
+              ${r.autorNome || 'Usuário'}
+              ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
+            </div>
+            <div class="comment-text">${r.texto}</div>
+            <span class="comment-time">${timeLabel}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── toggle post menu ──
+  window.togglePostMenu = function(postId) {
+    const menu = document.getElementById('menu-' + postId);
+    document.querySelectorAll('.post-options-menu.open').forEach(m => {
+      if (m.id !== 'menu-' + postId) m.classList.remove('open');
+    });
+    menu.classList.toggle('open');
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.post-options')) {
+      document.querySelectorAll('.post-options-menu.open').forEach(m => m.classList.remove('open'));
+    }
+  });
+
+  // ── toggle like (NO RELOAD - update DOM directly) ──
+  window.toggleLike = async function(postId, btnElement) {
+    if (!currentUser) { showToast('Faça login para curtir'); return; }
+
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+
+      const likedBy = postSnap.data().likedBy || [];
+      const isLiked = likedBy.includes(currentUser.uid);
+
+      if (isLiked) {
+        await updateDoc(postRef, {
+          likes: increment(-1),
+          likedBy: arrayRemove(currentUser.uid)
+        });
+
+        // Update DOM
+        btnElement.classList.remove('active');
+        btnElement.innerHTML = `👍 Curtir <span class="post-action-count">${Math.max(0, (postSnap.data().likes || 0) - 1) || ''}</span>`;
+      } else {
+        await updateDoc(postRef, {
+          likes: increment(1),
+          likedBy: arrayUnion(currentUser.uid)
+        });
+
+        // Update DOM
+        btnElement.classList.add('active');
+        btnElement.innerHTML = `❤️ Curtir <span class="post-action-count">${(postSnap.data().likes || 0) + 1}</span>`;
+      }
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao curtir');
+    }
+  };
+
+  // ── toggle comment like ──
+  window.toggleCommentLike = async function(postId, commentIdx, btnElement) {
+    if (!currentUser) { showToast('Faça login para curtir'); return; }
+
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+
+      const comments = postSnap.data().comments || [];
+      const comment = comments[commentIdx];
+      const likedBy = comment.likedBy || [];
+      const isLiked = likedBy.includes(currentUser.uid);
+
+      if (isLiked) {
+        comment.likedBy = likedBy.filter(uid => uid !== currentUser.uid);
+        comment.likes = Math.max(0, (comment.likes || 0) - 1);
+      } else {
+        comment.likedBy = [...likedBy, currentUser.uid];
+        comment.likes = (comment.likes || 0) + 1;
+      }
+
+      await updateDoc(postRef, { comments });
+
+      // Update DOM
+      if (isLiked) {
+        btnElement.classList.remove('liked');
+        btnElement.innerHTML = `👍 ${comment.likes > 0 ? comment.likes : 'Curtir'}`;
+      } else {
+        btnElement.classList.add('liked');
+        btnElement.innerHTML = `❤️ ${comment.likes}`;
+      }
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao curtir comentário');
+    }
+  };
+
+  // ── toggle comments ──
+  window.toggleComments = function(postId) {
+    const section = document.getElementById('comments-' + postId);
+    section.style.display = section.style.display === 'none' ? 'block' : 'none';
+    if (section.style.display === 'block') {
+      document.getElementById('comment-input-' + postId).focus();
+    }
+  };
+
+  // ── add comment ──
+  window.addComment = async function(postId) {
+    if (!currentUser) { showToast('Faça login para comentar'); return; }
+
+    const input = document.getElementById('comment-input-' + postId);
+    const texto = input.value.trim();
+    if (!texto) return;
+
+    try {
+      const postRef = doc(db, 'posts', postId);
+      const postSnap = await getDoc(postRef);
+      if (!postSnap.exists()) return;
+
+      const comments = postSnap.data().comments || [];
+      
+      if (currentReplyToComment && currentReplyToComment.postId === postId) {
+        // Adding reply
+        const parentIdx = currentReplyToComment.commentIdx;
+        if (!comments[parentIdx].replies) comments[parentIdx].replies = [];
+        comments[parentIdx].replies.push({
+          autorId: currentUser.uid,
+          autorNome: currentUserProfile?.nome || 'Usuário',
+          texto,
+          criadoEm: new Date()
+        });
+        currentReplyToComment = null;
+      } else {
+        // Adding top-level comment
+        comments.push({
+          autorId: currentUser.uid,
+          autorNome: currentUserProfile?.nome || 'Usuário',
+          texto,
+          criadoEm: new Date(),
+          likes: 0,
+          likedBy: [],
+          replies: []
+        });
+      }
+
+      await updateDoc(postRef, { comments });
+
+      input.value = '';
+      
+      // Re-render comments
+      const post = await getDoc(postRef);
+      const postAuthorId = post.data().userId;
+      document.getElementById('comments-list-' + postId).innerHTML = renderComments(comments, postId, postAuthorId);
+      
+      // Update counter
+      const counterEl = document.querySelector(`[onclick="toggleComments('${postId}')"] .post-action-count`);
+      if (counterEl) counterEl.textContent = comments.length;
+
+      showToast('Comentário adicionado!');
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao comentar');
+    }
+  };
+
+  // ── reply to comment ──
+  window.replyToComment = function(postId, commentIdx) {
+    if (!currentUser) { showToast('Faça login para responder'); return; }
+    
+    currentReplyToComment = { postId, commentIdx };
+    const input = document.getElementById('comment-input-' + postId);
+    input.focus();
+    input.placeholder = 'Respondendo ao comentário...';
+    
+    setTimeout(() => {
+      input.placeholder = 'Escreva um comentário…';
+      currentReplyToComment = null;
+    }, 30000);
+  };
+
+  // ── share post ──
+  window.sharePost = function(postId) {
+    const url = window.location.origin + '/feed.html?post=' + postId;
+    if (navigator.share) {
+      navigator.share({ title: 'Post no Pilaris', url });
+    } else {
+      navigator.clipboard.writeText(url);
+      showToast('Link copiado!');
+    }
+  };
+
+  // ── edit post ──
+  window.editPost = function(postId) {
+    currentEditPostId = postId;
+    const post = allPosts.find(p => p.id === postId);
+    if (!post) return;
+    
+    document.getElementById('editPostText').value = post.texto || '';
+    openModal('modalEditPost');
+  };
+
+  window.saveEditPost = async function() {
+    if (!currentEditPostId) return;
+    
+    const texto = document.getElementById('editPostText').value.trim();
+    if (!texto) { showToast('O texto não pode estar vazio'); return; }
+
+    try {
+      await updateDoc(doc(db, 'posts', currentEditPostId), { texto });
+      closeModal('modalEditPost');
+      showToast('Post editado!');
+      
+      // Update DOM without reload
+      const postEl = document.querySelector(`[data-post-id="${currentEditPostId}"]`);
+      if (postEl) {
+        const bodyEl = postEl.querySelector('.post-body');
+        if (bodyEl) bodyEl.textContent = texto;
+      }
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao editar');
+    }
+  };
+
+  // ── delete post ──
+  window.deletePost = async function(postId) {
+    if (!confirm('Tem certeza que deseja excluir este post?')) return;
+
+    try {
+      await deleteDoc(doc(db, 'posts', postId));
+      showToast('Post excluído!');
+      
+      // Remove from DOM without reload
+      const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+      if (postEl) postEl.remove();
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao excluir');
+    }
+  };
+
+  // ── report post ──
+  window.reportPost = function(postId) {
+    if (!currentUser) { showToast('Faça login para denunciar'); return; }
+    currentReportPostId = postId;
+    openModal('modalReport');
+  };
+
+  window.submitReport = async function() {
+    if (!currentReportPostId) return;
+
+    const reason = document.getElementById('reportReason').value;
+    const details = document.getElementById('reportDetails').value.trim();
+
+    try {
+      await addDoc(collection(db, 'reports'), {
+        postId: currentReportPostId,
+        reportedBy: currentUser.uid,
+        reason,
+        details,
+        criadoEm: new Date()
+      });
+
+      closeModal('modalReport');
+      showToast('Denúncia enviada. Obrigado!');
+      document.getElementById('reportDetails').value = '';
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao enviar denúncia');
+    }
+  };
+
+  // ── report comment ──
+  window.reportComment = function(postId, commentIdx) {
+    if (!currentUser) { showToast('Faça login para denunciar'); return; }
+    currentReportComment = { postId, commentIdx };
+    openModal('modalReportComment');
+  };
+
+  window.submitCommentReport = async function() {
+    if (!currentReportComment) return;
+
+    const reason = document.getElementById('reportCommentReason').value;
+    const details = document.getElementById('reportCommentDetails').value.trim();
+
+    try {
+      await addDoc(collection(db, 'commentReports'), {
+        postId: currentReportComment.postId,
+        commentIdx: currentReportComment.commentIdx,
+        reportedBy: currentUser.uid,
+        reason,
+        details,
+        criadoEm: new Date()
+      });
+
+      closeModal('modalReportComment');
+      showToast('Denúncia de comentário enviada. Obrigado!');
+      document.getElementById('reportCommentDetails').value = '';
+      currentReportComment = null;
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao enviar denúncia');
+    }
+  };
+</script>
+</body>
+</html>
