@@ -120,6 +120,32 @@
   </div>
 </div>
 
+<!-- Report Comment Modal -->
+<div class="modal-overlay" id="modalReportComment">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚠️ Denunciar Comentário</h3>
+      <button class="modal-close" onclick="closeModal('modalReportComment')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo da denúncia:</p>
+      <select id="reportCommentReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
+        <option value="spam">Spam</option>
+        <option value="assedio">Assédio ou bullying</option>
+        <option value="conteudo-inapropriado">Conteúdo inapropriado</option>
+        <option value="desinformacao">Desinformação</option>
+        <option value="violencia">Violência ou ameaça</option>
+        <option value="outro">Outro</option>
+      </select>
+      <textarea id="reportCommentDetails" placeholder="Detalhes adicionais (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical;"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modalReportComment')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitCommentReport()">Enviar denúncia</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
@@ -135,6 +161,7 @@
   let allProfiles = [];
   let currentEditPostId = null;
   let currentReportPostId = null;
+  let currentReportComment = null; // {postId, commentIdx}
   let currentReplyToComment = null; // {postId, commentIdx}
 
   // ── navbar scroll ──
@@ -399,6 +426,7 @@
                 ${isCommentLiked ? '❤️' : '👍'} ${commentLikes > 0 ? commentLikes : 'Curtir'}
               </button>
               <button class="comment-action-btn" onclick="replyToComment('${postId}', ${idx})">↩️ Responder</button>
+              ${!isPostAuthor && currentUser ? `<button class="comment-action-btn" onclick="reportComment('${postId}', ${idx})">⚠️ Denunciar</button>` : ''}
               <span class="comment-time">${timeLabel}</span>
             </div>
             ${replies.length > 0 ? `<div class="comment-replies">${renderReplies(replies, postId, idx, postAuthorId)}</div>` : ''}
@@ -694,6 +722,39 @@
       closeModal('modalReport');
       showToast('Denúncia enviada. Obrigado!');
       document.getElementById('reportDetails').value = '';
+    } catch(e) {
+      console.error(e);
+      showToast('Erro ao enviar denúncia');
+    }
+  };
+
+  // ── report comment ──
+  window.reportComment = function(postId, commentIdx) {
+    if (!currentUser) { showToast('Faça login para denunciar'); return; }
+    currentReportComment = { postId, commentIdx };
+    openModal('modalReportComment');
+  };
+
+  window.submitCommentReport = async function() {
+    if (!currentReportComment) return;
+
+    const reason = document.getElementById('reportCommentReason').value;
+    const details = document.getElementById('reportCommentDetails').value.trim();
+
+    try {
+      await addDoc(collection(db, 'commentReports'), {
+        postId: currentReportComment.postId,
+        commentIdx: currentReportComment.commentIdx,
+        reportedBy: currentUser.uid,
+        reason,
+        details,
+        criadoEm: new Date()
+      });
+
+      closeModal('modalReportComment');
+      showToast('Denúncia de comentário enviada. Obrigado!');
+      document.getElementById('reportCommentDetails').value = '';
+      currentReportComment = null;
     } catch(e) {
       console.error(e);
       showToast('Erro ao enviar denúncia');

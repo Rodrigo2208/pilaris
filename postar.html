@@ -41,7 +41,6 @@
         <!-- tipo de mídia -->
         <div class="type-tabs">
           <div class="type-tab active" data-type="foto" onclick="selectType(this)">📷 Foto</div>
-          <div class="type-tab"        data-type="video" onclick="selectType(this)">🎥 Vídeo</div>
           <div class="type-tab"        data-type="texto" onclick="selectType(this)">📝 Texto</div>
         </div>
 
@@ -55,19 +54,6 @@
           </div>
           <div class="media-preview" id="previewPhoto">
             <img id="imgPreview" src="" alt="Preview" />
-          </div>
-        </div>
-
-        <!-- upload zona (vídeo) -->
-        <div id="zoneVideo" style="display:none;">
-          <div class="upload-zone" onclick="document.getElementById('fileVideo').click()">
-            <div class="upload-icon">🎬</div>
-            <p>Clique para selecionar um vídeo</p>
-            <p class="upload-sub">MP4 ou WEBM – máx 50 MB</p>
-            <input type="file" id="fileVideo" accept="video/*" onchange="previewVideo(event)" />
-          </div>
-          <div class="media-preview" id="previewVideo">
-            <video id="vidPreview" controls playsinline></video>
           </div>
         </div>
 
@@ -122,12 +108,10 @@
     const type = tab.dataset.type;
 
     document.getElementById('zonePhoto').style.display = type === 'foto'  ? '' : 'none';
-    document.getElementById('zoneVideo').style.display = type === 'video' ? '' : 'none';
     document.getElementById('zoneTexto').style.display = type === 'texto' ? '' : 'none';
 
     // reset previews
     document.getElementById('previewPhoto').classList.remove('visible');
-    document.getElementById('previewVideo').classList.remove('visible');
   };
 
   // ── photo preview ──
@@ -137,17 +121,6 @@
     const url = URL.createObjectURL(file);
     document.getElementById('imgPreview').src = url;
     document.getElementById('previewPhoto').classList.add('visible');
-  };
-
-  // ── video preview ──
-  window.previewVideo = function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    const vid = document.getElementById('vidPreview');
-    vid.src   = url;
-    vid.load();
-    document.getElementById('previewVideo').classList.add('visible');
   };
 
   // ── upload imagem para ImgBB ──
@@ -183,11 +156,10 @@
     const texto      = document.getElementById('postTexto').value.trim();
 
     // validar: precisa de mídia ou texto
-    const hasPhoto = activeType === 'foto'  && document.getElementById('filePhoto').files[0];
-    const hasVideo = activeType === 'video' && document.getElementById('fileVideo').files[0];
-    if (!hasPhoto && !hasVideo && !texto) {
+    const hasPhoto = activeType === 'foto' && document.getElementById('filePhoto').files[0];
+    if (!hasPhoto && !texto) {
       msgDiv.className   = 'msg erro';
-      msgDiv.textContent = 'Adicione pelo menos uma mídia ou texto.';
+      msgDiv.textContent = 'Adicione pelo menos uma foto ou texto.';
       return;
     }
 
@@ -202,29 +174,6 @@
       if (hasPhoto) {
         mediaURL  = await uploadImgBB(document.getElementById('filePhoto').files[0]);
         mediaType = 'foto';
-      }
-
-      // ── upload vídeo ──
-      if (hasVideo) {
-        const vidFile = document.getElementById('fileVideo').files[0];
-        
-        // For videos, we'll use ImgBB only for small videos (under 10MB)
-        // For larger videos, we'd need Firebase Storage or another service
-        if (vidFile.size < 10 * 1024 * 1024) {
-          try {
-            // Try ImgBB for small videos
-            mediaURL = await uploadImgBB(vidFile);
-            mediaType = 'video';
-          } catch(err) {
-            msgDiv.className   = 'msg erro';
-            msgDiv.textContent = 'Vídeo muito grande. Use um vídeo menor (máx 10MB) ou hospede-o externamente.';
-            return;
-          }
-        } else {
-          msgDiv.className   = 'msg erro';
-          msgDiv.textContent = 'Vídeo muito grande. Use um vídeo menor que 10MB.';
-          return;
-        }
       }
 
       // ── salvar no Firestore ──
