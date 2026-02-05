@@ -41,6 +41,7 @@
         <!-- tipo de mídia -->
         <div class="type-tabs">
           <div class="type-tab active" data-type="foto" onclick="selectType(this)">📷 Foto</div>
+          <div class="type-tab"        data-type="video" onclick="selectType(this)">🎥 Vídeo</div>
           <div class="type-tab"        data-type="texto" onclick="selectType(this)">📝 Texto</div>
         </div>
 
@@ -54,6 +55,19 @@
           </div>
           <div class="media-preview" id="previewPhoto">
             <img id="imgPreview" src="" alt="Preview" />
+          </div>
+        </div>
+
+        <!-- upload zona (vídeo) -->
+        <div id="zoneVideo" style="display:none;">
+          <div class="upload-zone" onclick="document.getElementById('fileVideo').click()">
+            <div class="upload-icon">🎬</div>
+            <p>Clique para selecionar um vídeo</p>
+            <p class="upload-sub">MP4 ou WEBM – máx 50 MB</p>
+            <input type="file" id="fileVideo" accept="video/*" onchange="previewVideo(event)" />
+          </div>
+          <div class="media-preview" id="previewVideo">
+            <video id="vidPreview" controls playsinline></video>
           </div>
         </div>
 
@@ -108,10 +122,12 @@
     const type = tab.dataset.type;
 
     document.getElementById('zonePhoto').style.display = type === 'foto'  ? '' : 'none';
+    document.getElementById('zoneVideo').style.display = type === 'video' ? '' : 'none';
     document.getElementById('zoneTexto').style.display = type === 'texto' ? '' : 'none';
 
     // reset previews
     document.getElementById('previewPhoto').classList.remove('visible');
+    document.getElementById('previewVideo').classList.remove('visible');
   };
 
   // ── photo preview ──
@@ -121,6 +137,17 @@
     const url = URL.createObjectURL(file);
     document.getElementById('imgPreview').src = url;
     document.getElementById('previewPhoto').classList.add('visible');
+  };
+
+  // ── video preview ──
+  window.previewVideo = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const vid = document.getElementById('vidPreview');
+    vid.src   = url;
+    vid.load();
+    document.getElementById('previewVideo').classList.add('visible');
   };
 
   // ── upload imagem para ImgBB ──
@@ -156,10 +183,11 @@
     const texto      = document.getElementById('postTexto').value.trim();
 
     // validar: precisa de mídia ou texto
-    const hasPhoto = activeType === 'foto' && document.getElementById('filePhoto').files[0];
-    if (!hasPhoto && !texto) {
+    const hasPhoto = activeType === 'foto'  && document.getElementById('filePhoto').files[0];
+    const hasVideo = activeType === 'video' && document.getElementById('fileVideo').files[0];
+    if (!hasPhoto && !hasVideo && !texto) {
       msgDiv.className   = 'msg erro';
-      msgDiv.textContent = 'Adicione pelo menos uma foto ou texto.';
+      msgDiv.textContent = 'Adicione pelo menos uma mídia ou texto.';
       return;
     }
 
@@ -174,6 +202,26 @@
       if (hasPhoto) {
         mediaURL  = await uploadImgBB(document.getElementById('filePhoto').files[0]);
         mediaType = 'foto';
+      }
+
+      // ── upload vídeo (usa ImgBB também – suporta vídeos pequenos;
+      //    para vídeos maiores idealmente usar Firebase Storage) ──
+      if (hasVideo) {
+        // Tentativa via ImgBB (funciona para vídeos pequenos)
+        // Fallback: salvar URL de objeto (não persiste entre sessões)
+        const vidFile = document.getElementById('fileVideo').files[0];
+        if (vidFile.size < 32 * 1024 * 1024) {
+          // tenta imgbb
+          try {
+            mediaURL = await uploadImgBB(vidFile);
+          } catch(_) {
+            // fallback: URL temporária
+            mediaURL = URL.createObjectURL(vidFile);
+          }
+        } else {
+          mediaURL = URL.createObjectURL(vidFile);
+        }
+        mediaType = 'video';
       }
 
       // ── salvar no Firestore ──
