@@ -53,15 +53,7 @@
 
 <script type="module">
   import { auth } from './firebaseConfig.js';
-  import { signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  // ── Auto-redirect if already logged in ──
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      // User is already logged in, redirect to feed immediately
-      window.location.href = 'feed.html';
-    }
-  });
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
   // ── Submit ──
   const msgDiv = document.getElementById('msg');
@@ -78,7 +70,7 @@
       await signInWithEmailAndPassword(auth, email, senha);
       msgDiv.className    = 'msg ok';
       msgDiv.textContent  = '✓ Login realizado com sucesso!';
-      setTimeout(() => { window.location.href = 'feed.html'; }, 1000);
+      setTimeout(() => { window.location.href = 'feed.html'; }, 800);
     } catch (err) {
       msgDiv.className    = 'msg erro';
       if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
