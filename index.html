@@ -1,106 +1,17 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pilaris – Conecte. Crescea. Conquiste.</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <title>Loja Comunitária</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- ── NAVBAR ── -->
-<nav class="navbar" id="navbar">
-  <a href="index.html" class="navbar-logo">Pilaris</a>
-  <div class="navbar-links">
-    <a href="index.html"   class="active">Home</a>
-    <a href="feed.html">Feed</a>
-    <a href="pesquisa.html">Pesquisa</a>
-    <a href="perfil.html">Perfil</a>
-    <a href="login.html"   class="btn btn-primary btn-sm" style="padding:8px 22px;">Entrar</a>
-  </div>
-  <div class="burger" id="burger">
-    <span></span><span></span><span></span>
-  </div>
-</nav>
-
-<!-- mobile menu -->
-<div class="mobile-menu" id="mobileMenu">
-  <a href="index.html">Home</a>
-  <a href="feed.html">Feed</a>
-  <a href="pesquisa.html">Pesquisa</a>
-  <a href="perfil.html">Perfil</a>
-  <a href="login.html"  class="btn btn-primary" style="margin-top:10px;">Entrar</a>
-  <a href="cadastro.html" class="btn btn-outline">Cadastrar</a>
-</div>
-
-<!-- ── HERO ── -->
-<section class="hero">
-  <div class="hero-content">
-    <div class="hero-badge">🚀 A rede profissional do futuro</div>
-    <h1>Conecte talentos<br>e <span class="grad">oportunidades</span><br>de forma inteligente.</h1>
-    <p>Pilaris é a plataforma que une profissionais CLT e PJ com empresas que crescem. Mostre seu talento, encontre seu caminho.</p>
-    <div class="hero-buttons">
-      <a href="cadastro.html" class="btn btn-primary">Criar conta grátis</a>
-      <a href="login.html"    class="btn btn-outline">Entrar</a>
-    </div>
-  </div>
-</section>
-
-<!-- ── FEATURES ── -->
-<section style="padding: 70px 24px 90px; max-width: 1020px; margin: 0 auto;">
-  <h2 style="font-family: var(--font-head); font-weight: 700; font-size: 1.9rem; color: var(--clr-deep); text-align:center; margin-bottom: 10px;">Como funciona o Pilaris?</h2>
-  <p style="text-align:center; color: var(--clr-text-low); margin-bottom: 48px; font-size: .95rem;">Três passos simples para transformar sua carreira.</p>
-
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 22px;">
-
-    <!-- card 1 -->
-    <div class="card" style="padding: 32px 24px; text-align: center;">
-      <div style="font-size: 2.2rem; margin-bottom: 14px;">👤</div>
-      <h3 style="font-family: var(--font-head); font-weight: 700; color: var(--clr-deep); margin-bottom: 10px;">Crie seu perfil</h3>
-      <p style="font-size: .86rem; color: var(--clr-text-low); line-height: 1.6;">Escolha entre CLT ou PJ, preencha suas informações e comece a brilhar.</p>
-    </div>
-
-    <!-- card 2 -->
-    <div class="card" style="padding: 32px 24px; text-align: center;">
-      <div style="font-size: 2.2rem; margin-bottom: 14px;">📸</div>
-      <h3 style="font-family: var(--font-head); font-weight: 700; color: var(--clr-deep); margin-bottom: 10px;">Mostre seu talento</h3>
-      <p style="font-size: .86rem; color: var(--clr-text-low); line-height: 1.6;">Publique fotos e vídeos do seu trabalho. Empresas também apresentam suas culturas.</p>
-    </div>
-
-    <!-- card 3 -->
-    <div class="card" style="padding: 32px 24px; text-align: center;">
-      <div style="font-size: 2.2rem; margin-bottom: 14px;">🔍</div>
-      <h3 style="font-family: var(--font-head); font-weight: 700; color: var(--clr-deep); margin-bottom: 10px;">Pesquise com filtros</h3>
-      <p style="font-size: .86rem; color: var(--clr-text-low); line-height: 1.6;">Use filtros avançados para encontrar empresas ou profissionais exatamente como você precisa.</p>
-    </div>
-
-  </div>
-</section>
-
-<!-- ── TOAST ── -->
-<div class="toast" id="toast"></div>
-
-<script>
-// Navbar scroll shadow
-const navbar = document.getElementById('navbar');
-window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 20);
-});
-
-// Burger menu
-const burger     = document.getElementById('burger');
-const mobileMenu = document.getElementById('mobileMenu');
-burger.addEventListener('click', () => {
-  burger.classList.toggle('open');
-  mobileMenu.classList.toggle('open');
-});
-// close on link click
-mobileMenu.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => {
-    burger.classList.remove('open');
-    mobileMenu.classList.remove('open');
-  });
-});
-</script>
+  <main class="container">
+    <h1>Poli-Store</h1>
+    <button onclick="location.href='login.html'">Entrar</button>
+    <button onclick="location.href='cadastro.html'">Cadastrar</button>
+    <button onclick="location.href='produtos.html'">Ver Produtos</button>
+    <button onclick="location.href='vender.html'">Vender</button>
+  </main>
 </body>
 </html>
