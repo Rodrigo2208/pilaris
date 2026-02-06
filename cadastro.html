@@ -8,12 +8,15 @@
 </head>
 <body>
 
+<!-- ── NAVBAR ── -->
 <nav class="navbar" style="justify-content: center;">
   <a href="index.html" class="navbar-logo">Pilaris</a>
 </nav>
 
+<!-- ── FORM ── -->
 <div class="form-page">
   <div class="form-card card">
+
     <div class="card-header">
       <div style="font-size:2rem; margin-bottom: 8px;">✨</div>
       <h1>Criar conta</h1>
@@ -21,22 +24,23 @@
     </div>
 
     <div class="card-body">
-      <form id="formCadastro">
-        
+      <form id="formCadastro" autocomplete="off">
+
+        <!-- ── Selecionar papel ── -->
         <div class="form-group">
           <label>Qual é o seu papel?</label>
         </div>
-        <div class="role-toggle">
-          <div class="role-btn active" data-role="CLT" onclick="selectRole(this)">👔 CLT</div>
-          <div class="role-btn" data-role="PJ" onclick="selectRole(this)">💼 PJ</div>
-          <div class="role-btn" data-role="Empresa" onclick="selectRole(this)">🏢 Empresa</div>
+        <div class="role-toggle" id="roleToggle">
+          <div class="role-btn active" data-role="CLT"     onclick="selectRole(this)">👔 CLT</div>
+          <div class="role-btn"        data-role="PJ"      onclick="selectRole(this)">💼 PJ</div>
+          <div class="role-btn"        data-role="Empresa" onclick="selectRole(this)">🏢 Empresa</div>
         </div>
 
-        <div class="form-group" id="groupNome">
+        <!-- Nome / Empresa -->
+        <div class="form-group" id="groupNomePessoa">
           <label>Nome completo</label>
           <input type="text" id="nome" placeholder="João da Silva" required />
         </div>
-
         <div class="conditional-field" id="fieldNomeEmpresa">
           <div class="form-group">
             <label>Nome da empresa</label>
@@ -44,38 +48,45 @@
           </div>
         </div>
 
+        <!-- Email -->
         <div class="form-group">
           <label>Email</label>
           <input type="email" id="email" placeholder="seu@email.com" required />
         </div>
 
+        <!-- Senha -->
         <div class="form-group">
           <label>Senha</label>
           <input type="password" id="senha" placeholder="Mínimo 6 caracteres" required minlength="6" />
         </div>
 
+        <!-- Confirmar senha -->
         <div class="form-group">
           <label>Confirmar senha</label>
           <input type="password" id="senhaConfirma" placeholder="••••••••" required />
         </div>
 
+        <!-- Telefone (obrigatório) -->
         <div class="form-group">
-          <label>Telefone</label>
-          <input type="tel" id="telefone" placeholder="(11) 99999-9999" required oninput="maskTelefone(this)" />
+          <label>Número de telefone <span style="color: var(--clr-danger);">*</span></label>
+          <input type="tel" id="telefone" placeholder="(11) 99999-9999" required
+                 oninput="maskTelefone(this)" />
         </div>
 
+        <!-- Data de nascimento – aparece apenas para CLT -->
         <div class="conditional-field visible" id="fieldDOB">
           <div class="form-group">
-            <label>Data de nascimento</label>
+            <label>Data de nascimento <span style="color: var(--clr-danger);">*</span></label>
             <input type="date" id="dob" />
           </div>
         </div>
 
+        <!-- Empresa: campo de área de atuação -->
         <div class="conditional-field" id="fieldArea">
           <div class="form-group">
             <label>Área de atuação</label>
             <select id="areaEmpresa" onchange="checkAreaOutro()">
-              <option value="" disabled selected>Selecione…</option>
+              <option value=""          disabled selected>Selecione…</option>
               <option value="Tecnologia">Tecnologia</option>
               <option value="Saúde">Saúde</option>
               <option value="Educação">Educação</option>
@@ -90,7 +101,7 @@
           <div class="conditional-field" id="fieldAreaOutro">
             <div class="form-group">
               <label>Especifique a área</label>
-              <input type="text" id="areaOutro" placeholder="Digite a área" />
+              <input type="text" id="areaOutro" placeholder="Digite a área de atuação" />
             </div>
           </div>
         </div>
@@ -107,51 +118,74 @@
   </div>
 </div>
 
+<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
 <script type="module">
   import { auth, db } from './firebaseConfig.js';
-  import { createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { createUserWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import { setDoc, doc }                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+  // ── Auto-redirect if already logged in ──
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      window.location.href = 'feed.html';
+    }
+  });
+
+  // ─────────────────────────────────────────
+  // Role toggle logic
+  // ─────────────────────────────────────────
   window.selectRole = function(btn) {
     document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
+
     const role = btn.dataset.role;
-    const groupNome = document.getElementById('groupNome');
-    const fieldNomeEmpresa = document.getElementById('fieldNomeEmpresa');
-    const nomeInput = document.getElementById('nome');
-    const nomeEmpresaInput = document.getElementById('nomeEmpresa');
-    const fieldDOB = document.getElementById('fieldDOB');
-    const dobInput = document.getElementById('dob');
-    const fieldArea = document.getElementById('fieldArea');
+
+    // nome pessoa vs empresa
+    const groupNomePessoa    = document.getElementById('groupNomePessoa');
+    const fieldNomeEmpresa   = document.getElementById('fieldNomeEmpresa');
+    const nomeInput          = document.getElementById('nome');
+    const nomeEmpresaInput   = document.getElementById('nomeEmpresa');
 
     if (role === 'Empresa') {
-      groupNome.style.display = 'none';
+      groupNomePessoa.style.display = 'none';
       nomeInput.removeAttribute('required');
+      nomeInput.value = '';
       fieldNomeEmpresa.classList.add('visible');
       nomeEmpresaInput.setAttribute('required', '');
-      fieldArea.classList.add('visible');
-      fieldDOB.classList.remove('visible');
-      dobInput.removeAttribute('required');
     } else {
-      groupNome.style.display = '';
+      groupNomePessoa.style.display = '';
       nomeInput.setAttribute('required', '');
       fieldNomeEmpresa.classList.remove('visible');
       nomeEmpresaInput.removeAttribute('required');
+      nomeEmpresaInput.value = '';
+    }
+
+    // DOB – apenas CLT
+    const fieldDOB = document.getElementById('fieldDOB');
+    const dobInput = document.getElementById('dob');
+    if (role === 'CLT') {
+      fieldDOB.classList.add('visible');
+      dobInput.setAttribute('required', '');
+    } else {
+      fieldDOB.classList.remove('visible');
+      dobInput.removeAttribute('required');
+      dobInput.value = '';
+    }
+
+    // Área – apenas Empresa
+    const fieldArea = document.getElementById('fieldArea');
+    if (role === 'Empresa') {
+      fieldArea.classList.add('visible');
+    } else {
       fieldArea.classList.remove('visible');
-      
-      if (role === 'CLT') {
-        fieldDOB.classList.add('visible');
-        dobInput.setAttribute('required', '');
-      } else {
-        fieldDOB.classList.remove('visible');
-        dobInput.removeAttribute('required');
-      }
     }
   };
 
+  // ─────────────────────────────────────────
+  // Check if "Outro" is selected
+  // ─────────────────────────────────────────
   window.checkAreaOutro = function() {
     const areaSelect = document.getElementById('areaEmpresa');
     const fieldOutro = document.getElementById('fieldAreaOutro');
@@ -163,89 +197,85 @@
     } else {
       fieldOutro.classList.remove('visible');
       outroInput.removeAttribute('required');
+      outroInput.value = '';
     }
   };
 
+  // ─────────────────────────────────────────
+  // Telefone mask
+  // ─────────────────────────────────────────
   window.maskTelefone = function(input) {
     let v = input.value.replace(/\D/g, '');
-    if (v.length <= 2) v = v;
-    else if (v.length <= 6) v = '(' + v.slice(0,2) + ') ' + v.slice(2);
-    else if (v.length <= 10) v = '(' + v.slice(0,2) + ') ' + v.slice(2,6) + '-' + v.slice(6);
-    else v = '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7,11);
+    if      (v.length <= 2)  v = v;
+    else if (v.length <= 6)  v = '(' + v.slice(0,2) + ') ' + v.slice(2);
+    else if (v.length <= 10) v = '(' + v.slice(0,2) + ') ' + v.slice(2,6)  + '-' + v.slice(6);
+    else                     v = '(' + v.slice(0,2) + ') ' + v.slice(2,7)  + '-' + v.slice(7,11);
     input.value = v;
   };
 
+  // ─────────────────────────────────────────
+  // Submit
+  // ─────────────────────────────────────────
   const msgDiv = document.getElementById('msg');
-  
+
   document.getElementById('formCadastro').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    const role = document.querySelector('.role-btn.active').dataset.role;
-    const email = document.getElementById('email').value.trim();
-    const senha = document.getElementById('senha').value;
-    const senhaConfirma = document.getElementById('senhaConfirma').value;
-    const telefone = document.getElementById('telefone').value.trim();
-    const dob = document.getElementById('dob').value;
-    
-    const nome = role !== 'Empresa' 
+    msgDiv.className = 'msg';
+    msgDiv.textContent = '';
+
+    // ── gather values ──
+    const role         = document.querySelector('.role-btn.active').dataset.role;
+    const email        = document.getElementById('email').value.trim();
+    const senha        = document.getElementById('senha').value;
+    const senhaConfirma= document.getElementById('senhaConfirma').value;
+    const telefone     = document.getElementById('telefone').value.trim();
+    const dob          = document.getElementById('dob').value;
+
+    const nome         = role !== 'Empresa'
       ? document.getElementById('nome').value.trim()
       : document.getElementById('nomeEmpresa').value.trim();
 
+    // ── validações frontend ──
     if (senha !== senhaConfirma) {
-      msgDiv.className = 'msg erro';
+      msgDiv.className   = 'msg erro';
       msgDiv.textContent = 'As senhas não coincidem.';
       return;
     }
-
     if (senha.length < 6) {
-      msgDiv.className = 'msg erro';
-      msgDiv.textContent = 'Senha deve ter no mínimo 6 caracteres.';
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'A senha deve ter no mínimo 6 caracteres.';
       return;
     }
-
     if (telefone.replace(/\D/g,'').length < 10) {
-      msgDiv.className = 'msg erro';
-      msgDiv.textContent = 'Telefone inválido.';
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Informe um telefone válido.';
       return;
     }
-
     if (role === 'CLT' && !dob) {
-      msgDiv.className = 'msg erro';
-      msgDiv.textContent = 'Data de nascimento obrigatória para CLT.';
+      msgDiv.className   = 'msg erro';
+      msgDiv.textContent = 'Insira sua data de nascimento (obrigatório para CLT).';
       return;
     }
-
-    msgDiv.className = 'msg';
-    msgDiv.textContent = 'Criando conta...';
 
     try {
+      // ── criar usuário no Firebase Auth ──
       const { user } = await createUserWithEmailAndPassword(auth, email, senha);
 
+      // ── salvar perfil no Firestore ──
       const perfil = {
-        uid: user.uid,
+        uid:       user.uid,
         nome,
         email,
         telefone,
         role,
-        fotoURL: null,
-        bio: '',
-        skills: [],
-        experience: [],
-        education: [],
-        seguidores: [],
-        seguindo: [],
-        criadoEm: new Date()
+        criadoEm:  new Date(),
+        fotoURL:   null
       };
-
+      
       if (role === 'CLT') {
         perfil.dob = dob;
-        perfil.jobStatus = '';
       }
-
-      if (role === 'PJ') {
-        perfil.jobStatus = '';
-      }
-
+      
       if (role === 'Empresa') {
         let areaValue = document.getElementById('areaEmpresa').value;
         if (areaValue === 'Outro') {
@@ -256,14 +286,12 @@
 
       await setDoc(doc(db, 'perfis', user.uid), perfil);
 
-      msgDiv.className = 'msg ok';
-      msgDiv.textContent = '✓ Conta criada!';
-      setTimeout(() => window.location.href = 'feed.html', 500);
+      msgDiv.className   = 'msg ok';
+      msgDiv.textContent = '✓ Conta criada com sucesso!';
+      setTimeout(() => { window.location.href = 'feed.html'; }, 1400);
 
     } catch (err) {
-      console.error('Cadastro error:', err);
-      msgDiv.className = 'msg erro';
-      
+      msgDiv.className   = 'msg erro';
       if (err.code === 'auth/email-already-in-use') {
         msgDiv.textContent = 'Este email já está em uso.';
       } else if (err.code === 'auth/weak-password') {
@@ -271,7 +299,7 @@
       } else if (err.code === 'auth/invalid-email') {
         msgDiv.textContent = 'Email inválido.';
       } else {
-        msgDiv.textContent = 'Erro ao criar conta. Tente novamente.';
+        msgDiv.textContent = err.message;
       }
     }
   });

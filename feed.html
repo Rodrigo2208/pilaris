@@ -8,30 +8,44 @@
 </head>
 <body>
 
-<!-- ── NAVBAR ── -->
 <nav class="navbar" id="navbar">
   <a href="index.html" class="navbar-logo">Pilaris</a>
   <div class="navbar-links">
     <a href="index.html">Home</a>
     <a href="feed.html" class="active">Feed</a>
     <a href="perfil.html">Perfil</a>
+    
+    <!-- Settings Button -->
+    <div style="position: relative;">
+      <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+      <div class="settings-dropdown" id="settingsDropdown">
+        <div class="theme-toggle">
+          <span style="font-size:.88rem;">🌙 Modo Escuro</span>
+          <div class="theme-toggle-switch" id="themeToggle" onclick="toggleTheme()"></div>
+        </div>
+      </div>
+    </div>
   </div>
   <div class="burger" id="burger"><span></span><span></span><span></span></div>
 </nav>
+
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html">Home</a>
   <a href="feed.html">Feed</a>
   <a href="perfil.html">Perfil</a>
   <a href="postar.html" class="btn btn-primary">+ Novo post</a>
+  <div style="border-top: 1px solid var(--clr-border); margin-top: 10px; padding-top: 10px;">
+    <div class="theme-toggle">
+      <span style="font-size:.88rem;">🌙 Modo Escuro</span>
+      <div class="theme-toggle-switch" id="themeToggleMobile" onclick="toggleTheme()"></div>
+    </div>
+  </div>
 </div>
 
-<!-- ── PAGE ── -->
 <div class="page-wrap">
   <div class="page-inner">
 
-    <!-- ── SIDEBAR ── -->
     <aside class="sidebar">
-      <!-- mini perfil -->
       <div class="card">
         <div class="card-body" style="text-align:center;">
           <div class="avatar avatar-lg cursor-pointer" id="avatarSidebar" style="margin:0 auto 12px;" onclick="window.location.href='perfil.html'">P</div>
@@ -45,39 +59,32 @@
         </div>
       </div>
 
-      <!-- search bar integrated -->
       <div class="card">
         <div class="card-body">
           <h5 style="font-family: var(--font-head); font-weight:600; color: var(--clr-deep); margin-bottom: 10px; font-size:.88rem;">🔍 Pesquisar</h5>
           <input type="text" id="searchInput" placeholder="Buscar pessoas ou empresas..." 
-                 style="width:100%; padding: 10px 14px; border: 1.5px solid var(--clr-border); border-radius: 20px; font-size:.88rem; outline:none;"
+                 style="width:100%; padding: 10px 14px; border: 1.5px solid var(--clr-border); border-radius: 20px; font-size:.88rem; outline:none; background: var(--clr-card); color: var(--clr-text);"
                  oninput="searchProfiles()" />
           <div id="searchResults" style="margin-top: 10px; max-height: 300px; overflow-y: auto;"></div>
         </div>
       </div>
     </aside>
 
-    <!-- ── MAIN COL ── -->
     <main class="main-col">
-
-      <!-- caixa rápida de post -->
       <div class="card post-create-box" style="margin-bottom: 20px;">
         <div class="avatar avatar-sm" id="avatarQuick">P</div>
         <input type="text" placeholder="O que está acontecendo?" readonly
-               onclick="window.location.href='postar.html'" style="cursor:pointer;" />
+               onclick="window.location.href='postar.html'" style="cursor:pointer; background: var(--clr-card); color: var(--clr-text);" />
       </div>
 
-      <!-- feed dinâmico -->
       <div id="feedContainer">
         <p style="text-align:center; color: var(--clr-text-low); padding: 40px 0;" id="feedEmpty">Carregando posts…</p>
       </div>
-
     </main>
   </div>
 </div>
 
-<!-- ── MODALS ── -->
-<!-- Edit Post Modal -->
+<!-- Modals -->
 <div class="modal-overlay" id="modalEditPost">
   <div class="modal">
     <div class="modal-header">
@@ -85,7 +92,7 @@
       <button class="modal-close" onclick="closeModal('modalEditPost')">×</button>
     </div>
     <div class="modal-body">
-      <textarea id="editPostText" style="width:100%; min-height: 100px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.9rem; resize: vertical;"></textarea>
+      <textarea id="editPostText" style="width:100%; min-height: 100px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.9rem; resize: vertical; background: var(--clr-card); color: var(--clr-text);"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modalEditPost')">Cancelar</button>
@@ -94,7 +101,6 @@
   </div>
 </div>
 
-<!-- Report Post Modal -->
 <div class="modal-overlay" id="modalReport">
   <div class="modal">
     <div class="modal-header">
@@ -102,25 +108,24 @@
       <button class="modal-close" onclick="closeModal('modalReport')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo da denúncia:</p>
-      <select id="reportReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
+      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo:</p>
+      <select id="reportReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px; background: var(--clr-card); color: var(--clr-text);">
         <option value="spam">Spam</option>
-        <option value="assedio">Assédio ou bullying</option>
+        <option value="assedio">Assédio</option>
         <option value="conteudo-inapropriado">Conteúdo inapropriado</option>
         <option value="desinformacao">Desinformação</option>
-        <option value="violencia">Violência ou ameaça</option>
+        <option value="violencia">Violência</option>
         <option value="outro">Outro</option>
       </select>
-      <textarea id="reportDetails" placeholder="Detalhes adicionais (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical;"></textarea>
+      <textarea id="reportDetails" placeholder="Detalhes (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical; background: var(--clr-card); color: var(--clr-text);"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modalReport')">Cancelar</button>
-      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitReport()">Enviar denúncia</button>
+      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitReport()">Enviar</button>
     </div>
   </div>
 </div>
 
-<!-- Report Comment Modal -->
 <div class="modal-overlay" id="modalReportComment">
   <div class="modal">
     <div class="modal-header">
@@ -128,25 +133,24 @@
       <button class="modal-close" onclick="closeModal('modalReportComment')">×</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo da denúncia:</p>
-      <select id="reportCommentReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
+      <p style="font-size:.88rem; color: var(--clr-text-mid); margin-bottom: 14px;">Selecione o motivo:</p>
+      <select id="reportCommentReason" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px; background: var(--clr-card); color: var(--clr-text);">
         <option value="spam">Spam</option>
-        <option value="assedio">Assédio ou bullying</option>
+        <option value="assedio">Assédio</option>
         <option value="conteudo-inapropriado">Conteúdo inapropriado</option>
         <option value="desinformacao">Desinformação</option>
-        <option value="violencia">Violência ou ameaça</option>
+        <option value="violencia">Violência</option>
         <option value="outro">Outro</option>
       </select>
-      <textarea id="reportCommentDetails" placeholder="Detalhes adicionais (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical;"></textarea>
+      <textarea id="reportCommentDetails" placeholder="Detalhes (opcional)" style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; margin-top: 10px; resize: vertical; background: var(--clr-card); color: var(--clr-text);"></textarea>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modalReportComment')">Cancelar</button>
-      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitCommentReport()">Enviar denúncia</button>
+      <button class="btn btn-primary btn-sm" style="background: var(--clr-danger); border-color: var(--clr-danger);" onclick="submitCommentReport()">Enviar</button>
     </div>
   </div>
 </div>
 
-<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
 <script type="module">
@@ -154,39 +158,72 @@
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, orderBy, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ── globals ──
   let currentUser = null;
   let currentUserProfile = null;
   let allPosts = [];
   let allProfiles = [];
   let currentEditPostId = null;
   let currentReportPostId = null;
-  let currentReportComment = null; // {postId, commentIdx}
-  let currentReplyToComment = null; // {postId, commentIdx}
+  let currentReportComment = null;
+  let currentReplyToComment = null;
+  let profilesCache = {}; // Cache para perfis
 
-  // ── navbar scroll ──
+  // Theme
+  function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeToggles(savedTheme === 'dark');
+  }
+
+  function updateThemeToggles(isDark) {
+    const toggles = [document.getElementById('themeToggle'), document.getElementById('themeToggleMobile')];
+    toggles.forEach(t => {
+      if (t) {
+        if (isDark) t.classList.add('active');
+        else t.classList.remove('active');
+      }
+    });
+  }
+
+  window.toggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeToggles(newTheme === 'dark');
+  };
+
+  window.toggleSettings = () => {
+    const dropdown = document.getElementById('settingsDropdown');
+    dropdown.classList.toggle('open');
+  };
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.settings-btn') && !e.target.closest('.settings-dropdown')) {
+      document.getElementById('settingsDropdown')?.classList.remove('open');
+    }
+  });
+
+  initTheme();
+
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
 
-  // ── burger ──
   const burger = document.getElementById('burger');
-  const mMenu  = document.getElementById('mobileMenu');
+  const mMenu = document.getElementById('mobileMenu');
   burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
   mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
 
-  // ── toast ──
-  window.showToast = function(msg) {
+  window.showToast = (msg) => {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2600);
   };
 
-  // ── modal helpers ──
-  window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
-  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+  window.openModal = (id) => document.getElementById(id).classList.add('open');
+  window.closeModal = (id) => document.getElementById(id).classList.remove('open');
 
-  // ── auth + load perfil ──
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     if (!user) {
@@ -201,18 +238,18 @@
       if (snap.exists()) {
         currentUserProfile = snap.data();
         const p = currentUserProfile;
-        document.getElementById('nomeSidebar').textContent  = p.nome || 'Usuário';
+        document.getElementById('nomeSidebar').textContent = p.nome || 'Usuário';
         const badge = document.getElementById('badgeSidebar');
         badge.textContent = p.role;
-        badge.className   = 'role-badge ' + p.role.toLowerCase();
+        badge.className = 'role-badge ' + p.role.toLowerCase();
 
         const inicial = (p.nome || 'U')[0].toUpperCase();
         if (p.fotoURL) {
-          document.getElementById('avatarSidebar').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" />`;
-          document.getElementById('avatarQuick').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" />`;
+          document.getElementById('avatarSidebar').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+          document.getElementById('avatarQuick').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
         } else {
           document.getElementById('avatarSidebar').textContent = inicial;
-          document.getElementById('avatarQuick').textContent   = inicial;
+          document.getElementById('avatarQuick').textContent = inicial;
         }
       }
     } catch(_) {}
@@ -221,17 +258,19 @@
     loadAllProfiles();
   });
 
-  // ── load all profiles for search ──
   async function loadAllProfiles() {
     try {
       const snap = await getDocs(collection(db, 'perfis'));
       allProfiles = [];
-      snap.forEach(d => allProfiles.push({ id: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const data = { id: d.id, ...d.data() };
+        allProfiles.push(data);
+        profilesCache[d.id] = data; // Add to cache
+      });
     } catch(e) { console.error(e); }
   }
 
-  // ── search profiles ──
-  window.searchProfiles = function() {
+  window.searchProfiles = () => {
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
     const container = document.getElementById('searchResults');
     
@@ -254,7 +293,7 @@
     container.innerHTML = results.map(p => {
       const inicial = (p.nome || 'U')[0].toUpperCase();
       const avatarHTML = p.fotoURL 
-        ? `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover;" />`
+        ? `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
         : inicial;
       
       return `
@@ -275,77 +314,78 @@
     });
   };
 
-  // ── carregar posts ──
   async function loadFeed() {
     const container = document.getElementById('feedContainer');
-    const emptyMsg  = document.getElementById('feedEmpty');
+    const emptyMsg = document.getElementById('feedEmpty');
 
     try {
-      const q    = query(collection(db, 'posts'), orderBy('criadoEm', 'desc'));
+      const q = query(collection(db, 'posts'), orderBy('criadoEm', 'desc'));
       const snap = await getDocs(q);
 
       if (snap.empty) {
-        emptyMsg.textContent = 'Nenhum post ainda. Seja o primeiro! 🎉';
+        emptyMsg.textContent = 'Nenhum post ainda. 🎉';
         return;
       }
 
       emptyMsg.remove();
       allPosts = [];
 
-      // fetch author profiles
-      const autorCache = {};
-
       for (const d of snap.docs) {
         const post = { id: d.id, ...d.data() };
-        allPosts.push(post);
-
-        if (!autorCache[post.userId]) {
+        
+        // Check if author exists
+        let autor = profilesCache[post.userId];
+        if (!autor) {
           try {
             const pSnap = await getDoc(doc(db, 'perfis', post.userId));
-            autorCache[post.userId] = pSnap.exists() ? pSnap.data() : null;
-          } catch(_) { autorCache[post.userId] = null; }
+            if (pSnap.exists()) {
+              autor = pSnap.data();
+              profilesCache[post.userId] = autor;
+            } else {
+              // User deleted - skip this post
+              console.log('Skipping post from deleted user:', post.userId);
+              continue;
+            }
+          } catch(_) { 
+            continue; 
+          }
         }
 
-        renderPost(post, autorCache[post.userId], container);
+        allPosts.push(post);
+        renderPost(post, autor, container);
       }
     } catch(err) {
       console.error(err);
-      emptyMsg.textContent = 'Erro ao carregar o feed. Tente recarregar.';
+      emptyMsg.textContent = 'Erro ao carregar feed.';
     }
   }
 
-  // ── render single post ──
   function renderPost(post, autor, container) {
     const nomeAutor = autor ? autor.nome : 'Usuário';
     const roleAutor = autor ? autor.role : '';
     const fotoAutor = autor?.fotoURL;
-    const inicial   = nomeAutor[0].toUpperCase();
+    const inicial = nomeAutor[0].toUpperCase();
 
     const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
     const horasAtras = Math.round((Date.now() - criadoEm) / 3.6e6);
-    const timeLabel  = horasAtras < 1 ? 'agora' : horasAtras < 24 ? horasAtras + 'h' : Math.floor(horasAtras/24) + 'd';
+    const timeLabel = horasAtras < 1 ? 'agora' : horasAtras < 24 ? horasAtras + 'h' : Math.floor(horasAtras/24) + 'd';
 
     const avatarHTML = fotoAutor
       ? `<img src="${fotoAutor}" alt="${nomeAutor}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
       : inicial;
 
-    // media
     let mediaHTML = '';
     if (post.mediaURL) {
       mediaHTML = post.mediaType === 'video'
-        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}">Seu navegador não suporta vídeo.</video></div>`
+        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}"></video></div>`
         : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
     }
 
-    // likes
     const likes = post.likes || 0;
     const likedBy = post.likedBy || [];
     const isLiked = currentUser && likedBy.includes(currentUser.uid);
 
-    // comments
     const comments = post.comments || [];
-
-    // owner actions
     const isOwner = currentUser && post.userId === currentUser.uid;
 
     const postEl = document.createElement('div');
@@ -386,7 +426,7 @@
           ${renderComments(comments, post.id, post.userId)}
         </div>
         <div class="comment-form">
-          <input type="text" id="comment-input-${post.id}" placeholder="Escreva um comentário…" onkeypress="if(event.key==='Enter') addComment('${post.id}')" />
+          <input type="text" id="comment-input-${post.id}" placeholder="Escreva um comentário…" onkeypress="if(event.key==='Enter') addComment('${post.id}')" style="background: var(--clr-card); color: var(--clr-text);" />
           <button onclick="addComment('${post.id}')">Enviar</button>
         </div>
       </div>
@@ -395,15 +435,20 @@
     container.appendChild(postEl);
   }
 
-  // ── render comments with replies ──
   function renderComments(comments, postId, postAuthorId) {
-    if (!comments || !comments.length) return '<p style="font-size:.82rem; color: var(--clr-text-low); padding:8px 0;">Sem comentários ainda.</p>';
+    if (!comments || !comments.length) return '<p style="font-size:.82rem; color: var(--clr-text-low); padding:8px 0;">Sem comentários.</p>';
     
     return comments.map((c, idx) => {
       const time = c.criadoEm?.toDate ? c.criadoEm.toDate() : new Date(c.criadoEm);
       const timeAgo = Math.round((Date.now() - time) / 3.6e6);
       const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
+      
+      // Get author profile from cache for avatar
+      const autorProfile = profilesCache[c.autorId];
       const inicial = (c.autorNome || 'U')[0].toUpperCase();
+      const avatarHTML = autorProfile?.fotoURL 
+        ? `<img src="${autorProfile.fotoURL}" alt="${c.autorNome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+        : inicial;
 
       const commentLikes = c.likes || 0;
       const commentLikedBy = c.likedBy || [];
@@ -414,7 +459,7 @@
 
       let html = `
         <div class="comment-item">
-          <div class="avatar avatar-sm">${inicial}</div>
+          <div class="avatar avatar-sm">${avatarHTML}</div>
           <div class="comment-body">
             <div class="comment-author">
               ${c.autorNome || 'Usuário'}
@@ -438,18 +483,24 @@
     }).join('');
   }
 
-  // ── render replies ──
   function renderReplies(replies, postId, commentIdx, postAuthorId) {
     return replies.map((r, rIdx) => {
       const time = r.criadoEm?.toDate ? r.criadoEm.toDate() : new Date(r.criadoEm);
       const timeAgo = Math.round((Date.now() - time) / 3.6e6);
       const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
+      
+      // Get author profile from cache for avatar in replies
+      const autorProfile = profilesCache[r.autorId];
       const inicial = (r.autorNome || 'U')[0].toUpperCase();
+      const avatarHTML = autorProfile?.fotoURL 
+        ? `<img src="${autorProfile.fotoURL}" alt="${r.autorNome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+        : inicial;
+      
       const isPostAuthor = r.autorId === postAuthorId;
 
       return `
         <div class="comment-item" style="border:none; padding-bottom:8px; margin-bottom:8px;">
-          <div class="avatar avatar-sm">${inicial}</div>
+          <div class="avatar avatar-sm">${avatarHTML}</div>
           <div class="comment-body">
             <div class="comment-author">
               ${r.autorNome || 'Usuário'}
@@ -463,8 +514,7 @@
     }).join('');
   }
 
-  // ── toggle post menu ──
-  window.togglePostMenu = function(postId) {
+  window.togglePostMenu = (postId) => {
     const menu = document.getElementById('menu-' + postId);
     document.querySelectorAll('.post-options-menu.open').forEach(m => {
       if (m.id !== 'menu-' + postId) m.classList.remove('open');
@@ -478,8 +528,7 @@
     }
   });
 
-  // ── toggle like (NO RELOAD - update DOM directly) ──
-  window.toggleLike = async function(postId, btnElement) {
+  window.toggleLike = async (postId, btnElement) => {
     if (!currentUser) { showToast('Faça login para curtir'); return; }
 
     try {
@@ -495,8 +544,6 @@
           likes: increment(-1),
           likedBy: arrayRemove(currentUser.uid)
         });
-
-        // Update DOM
         btnElement.classList.remove('active');
         btnElement.innerHTML = `👍 Curtir <span class="post-action-count">${Math.max(0, (postSnap.data().likes || 0) - 1) || ''}</span>`;
       } else {
@@ -504,8 +551,6 @@
           likes: increment(1),
           likedBy: arrayUnion(currentUser.uid)
         });
-
-        // Update DOM
         btnElement.classList.add('active');
         btnElement.innerHTML = `❤️ Curtir <span class="post-action-count">${(postSnap.data().likes || 0) + 1}</span>`;
       }
@@ -515,9 +560,8 @@
     }
   };
 
-  // ── toggle comment like ──
-  window.toggleCommentLike = async function(postId, commentIdx, btnElement) {
-    if (!currentUser) { showToast('Faça login para curtir'); return; }
+  window.toggleCommentLike = async (postId, commentIdx, btnElement) => {
+    if (!currentUser) { showToast('Faça login'); return; }
 
     try {
       const postRef = doc(db, 'posts', postId);
@@ -539,7 +583,6 @@
 
       await updateDoc(postRef, { comments });
 
-      // Update DOM
       if (isLiked) {
         btnElement.classList.remove('liked');
         btnElement.innerHTML = `👍 ${comment.likes > 0 ? comment.likes : 'Curtir'}`;
@@ -549,12 +592,11 @@
       }
     } catch(e) {
       console.error(e);
-      showToast('Erro ao curtir comentário');
+      showToast('Erro');
     }
   };
 
-  // ── toggle comments ──
-  window.toggleComments = function(postId) {
+  window.toggleComments = (postId) => {
     const section = document.getElementById('comments-' + postId);
     section.style.display = section.style.display === 'none' ? 'block' : 'none';
     if (section.style.display === 'block') {
@@ -562,9 +604,8 @@
     }
   };
 
-  // ── add comment ──
-  window.addComment = async function(postId) {
-    if (!currentUser) { showToast('Faça login para comentar'); return; }
+  window.addComment = async (postId) => {
+    if (!currentUser) { showToast('Faça login'); return; }
 
     const input = document.getElementById('comment-input-' + postId);
     const texto = input.value.trim();
@@ -578,7 +619,6 @@
       const comments = postSnap.data().comments || [];
       
       if (currentReplyToComment && currentReplyToComment.postId === postId) {
-        // Adding reply
         const parentIdx = currentReplyToComment.commentIdx;
         if (!comments[parentIdx].replies) comments[parentIdx].replies = [];
         comments[parentIdx].replies.push({
@@ -589,7 +629,6 @@
         });
         currentReplyToComment = null;
       } else {
-        // Adding top-level comment
         comments.push({
           autorId: currentUser.uid,
           autorNome: currentUserProfile?.nome || 'Usuário',
@@ -605,30 +644,27 @@
 
       input.value = '';
       
-      // Re-render comments
       const post = await getDoc(postRef);
       const postAuthorId = post.data().userId;
       document.getElementById('comments-list-' + postId).innerHTML = renderComments(comments, postId, postAuthorId);
       
-      // Update counter
       const counterEl = document.querySelector(`[onclick="toggleComments('${postId}')"] .post-action-count`);
       if (counterEl) counterEl.textContent = comments.length;
 
       showToast('Comentário adicionado!');
     } catch(e) {
       console.error(e);
-      showToast('Erro ao comentar');
+      showToast('Erro');
     }
   };
 
-  // ── reply to comment ──
-  window.replyToComment = function(postId, commentIdx) {
-    if (!currentUser) { showToast('Faça login para responder'); return; }
+  window.replyToComment = (postId, commentIdx) => {
+    if (!currentUser) { showToast('Faça login'); return; }
     
     currentReplyToComment = { postId, commentIdx };
     const input = document.getElementById('comment-input-' + postId);
     input.focus();
-    input.placeholder = 'Respondendo ao comentário...';
+    input.placeholder = 'Respondendo...';
     
     setTimeout(() => {
       input.placeholder = 'Escreva um comentário…';
@@ -636,8 +672,7 @@
     }, 30000);
   };
 
-  // ── share post ──
-  window.sharePost = function(postId) {
+  window.sharePost = (postId) => {
     const url = window.location.origin + '/feed.html?post=' + postId;
     if (navigator.share) {
       navigator.share({ title: 'Post no Pilaris', url });
@@ -647,8 +682,7 @@
     }
   };
 
-  // ── edit post ──
-  window.editPost = function(postId) {
+  window.editPost = (postId) => {
     currentEditPostId = postId;
     const post = allPosts.find(p => p.id === postId);
     if (!post) return;
@@ -657,18 +691,17 @@
     openModal('modalEditPost');
   };
 
-  window.saveEditPost = async function() {
+  window.saveEditPost = async () => {
     if (!currentEditPostId) return;
     
     const texto = document.getElementById('editPostText').value.trim();
-    if (!texto) { showToast('O texto não pode estar vazio'); return; }
+    if (!texto) { showToast('Texto vazio'); return; }
 
     try {
       await updateDoc(doc(db, 'posts', currentEditPostId), { texto });
       closeModal('modalEditPost');
-      showToast('Post editado!');
+      showToast('Editado!');
       
-      // Update DOM without reload
       const postEl = document.querySelector(`[data-post-id="${currentEditPostId}"]`);
       if (postEl) {
         const bodyEl = postEl.querySelector('.post-body');
@@ -676,35 +709,32 @@
       }
     } catch(e) {
       console.error(e);
-      showToast('Erro ao editar');
+      showToast('Erro');
     }
   };
 
-  // ── delete post ──
-  window.deletePost = async function(postId) {
-    if (!confirm('Tem certeza que deseja excluir este post?')) return;
+  window.deletePost = async (postId) => {
+    if (!confirm('Excluir este post?')) return;
 
     try {
       await deleteDoc(doc(db, 'posts', postId));
-      showToast('Post excluído!');
+      showToast('Excluído!');
       
-      // Remove from DOM without reload
       const postEl = document.querySelector(`[data-post-id="${postId}"]`);
       if (postEl) postEl.remove();
     } catch(e) {
       console.error(e);
-      showToast('Erro ao excluir');
+      showToast('Erro');
     }
   };
 
-  // ── report post ──
-  window.reportPost = function(postId) {
-    if (!currentUser) { showToast('Faça login para denunciar'); return; }
+  window.reportPost = (postId) => {
+    if (!currentUser) { showToast('Faça login'); return; }
     currentReportPostId = postId;
     openModal('modalReport');
   };
 
-  window.submitReport = async function() {
+  window.submitReport = async () => {
     if (!currentReportPostId) return;
 
     const reason = document.getElementById('reportReason').value;
@@ -720,22 +750,21 @@
       });
 
       closeModal('modalReport');
-      showToast('Denúncia enviada. Obrigado!');
+      showToast('Denúncia enviada!');
       document.getElementById('reportDetails').value = '';
     } catch(e) {
       console.error(e);
-      showToast('Erro ao enviar denúncia');
+      showToast('Erro');
     }
   };
 
-  // ── report comment ──
-  window.reportComment = function(postId, commentIdx) {
-    if (!currentUser) { showToast('Faça login para denunciar'); return; }
+  window.reportComment = (postId, commentIdx) => {
+    if (!currentUser) { showToast('Faça login'); return; }
     currentReportComment = { postId, commentIdx };
     openModal('modalReportComment');
   };
 
-  window.submitCommentReport = async function() {
+  window.submitCommentReport = async () => {
     if (!currentReportComment) return;
 
     const reason = document.getElementById('reportCommentReason').value;
@@ -752,12 +781,12 @@
       });
 
       closeModal('modalReportComment');
-      showToast('Denúncia de comentário enviada. Obrigado!');
+      showToast('Denúncia enviada!');
       document.getElementById('reportCommentDetails').value = '';
       currentReportComment = null;
     } catch(e) {
       console.error(e);
-      showToast('Erro ao enviar denúncia');
+      showToast('Erro');
     }
   };
 </script>
