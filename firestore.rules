@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ══════════════════════════════════════════════════════════
+    // PERFIS - Permite leitura pública, escrita apenas do dono
+    // ══════════════════════════════════════════════════════════
+    match /perfis/{userId} {
+      // Qualquer pessoa pode ler perfis (para busca e visualização)
+      allow read: if true;
+      
+      // Apenas o dono pode criar/atualizar seu próprio perfil
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if request.auth != null && request.auth.uid == userId;
+      
+      // Apenas o dono pode deletar seu perfil
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // ══════════════════════════════════════════════════════════
+    // POSTS - Leitura pública, escrita autenticada
+    // ══════════════════════════════════════════════════════════
+    match /posts/{postId} {
+      // Qualquer pessoa pode ler posts
+      allow read: if true;
+      
+      // Apenas usuários autenticados podem criar posts
+      allow create: if request.auth != null 
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // Apenas o autor pode editar/deletar o post
+      allow update, delete: if request.auth != null 
+                            && resource.data.userId == request.auth.uid;
+    }
+    
+    // ══════════════════════════════════════════════════════════
+    // DENÚNCIAS - Apenas criação por usuários autenticados
+    // ══════════════════════════════════════════════════════════
+    match /reports/{reportId} {
+      // Apenas usuários autenticados podem criar denúncias
+      allow create: if request.auth != null;
+      
+      // Apenas admins podem ler (você pode ajustar isso)
+      allow read: if false;
+    }
+    
+    match /commentReports/{reportId} {
+      // Apenas usuários autenticados podem criar denúncias
+      allow create: if request.auth != null;
+      
+      // Apenas admins podem ler
+      allow read: if false;
+    }
+  }
+}

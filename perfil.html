@@ -8,7 +8,6 @@
 </head>
 <body>
 
-<!-- ── NAVBAR ── -->
 <nav class="navbar" id="navbar">
   <a href="index.html" class="navbar-logo">Pilaris</a>
   <div class="navbar-links">
@@ -18,114 +17,107 @@
   </div>
   <div class="burger" id="burger"><span></span><span></span><span></span></div>
 </nav>
+
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html">Home</a>
   <a href="feed.html">Feed</a>
   <a href="perfil.html">Perfil</a>
-  <a href="login.html" class="btn btn-outline" id="logoutBtn">Sair</a>
+  <button class="btn btn-outline btn-sm" id="logoutBtnMobile" style="margin-top:10px; width:100%;">Sair</button>
 </div>
 
-<!-- ── PAGE ── -->
 <div class="page-wrap">
   <div style="max-width: 720px; margin: 0 auto; padding: 36px 20px;">
 
-    <!-- perfil hero -->
-    <div class="card">
-      <div class="perfil-hero" id="perfilHero">
-        <div class="avatar avatar-xl avatar-upload" id="avatarPerfil" onclick="isOwnProfile && document.getElementById('photoUpload').click()">U
-          <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />
+    <!-- Loading -->
+    <div id="loading" style="text-align:center; padding: 60px 20px;">
+      <p style="color: var(--clr-text-low);">Carregando perfil...</p>
+    </div>
+
+    <!-- Conteúdo do perfil -->
+    <div id="perfilContent" style="display:none;">
+      
+      <!-- Hero -->
+      <div class="card">
+        <div class="perfil-hero">
+          <div class="avatar avatar-xl" id="avatarPerfil">U</div>
+          <h2 id="nomePerfil">Usuário</h2>
+          <span class="role-badge clt" id="rolePerfil">CLT</span>
+          <p id="bioPerfil" style="margin-top: 8px; color: var(--clr-text-mid);"></p>
+
+          <!-- Botões de ação (para outros perfis) -->
+          <div id="actionButtons" style="margin-top: 16px; display:none; gap: 10px; justify-content:center;">
+            <button class="btn-follow" id="btnFollow" onclick="toggleFollow()">Seguir</button>
+            <button class="btn btn-primary btn-sm" onclick="contactUser()">✉️ Contato</button>
+          </div>
+
+          <div class="perfil-stats">
+            <div class="stat"><strong id="statPosts">0</strong><span>Posts</span></div>
+            <div class="stat"><strong id="statSeguidores">0</strong><span>Seguidores</span></div>
+            <div class="stat"><strong id="statSeguindo">0</strong><span>Seguindo</span></div>
+          </div>
         </div>
-        <h2 id="nomePerfil">Usuário</h2>
-        <span class="role-badge clt" id="rolePerfil">CLT</span><br>
-        <p id="descPerfil" style="margin-top: 8px;">Seu resumo aparece aqui.</p>
+      </div>
 
-        <!-- follow/contact buttons (shown for other profiles) -->
-        <div id="actionButtons" style="margin-top: 16px; display:none; gap: 10px; justify-content:center;">
-          <button class="btn-follow" id="btnFollow" onclick="toggleFollow()">Seguir</button>
-          <button class="btn btn-primary btn-sm" onclick="contactUser()">✉️ Contato</button>
-        </div>
-
-        <div class="perfil-stats">
-          <div class="stat"><strong id="statPosts">0</strong><span>Posts</span></div>
-          <div class="stat"><strong id="statSeguidores">0</strong><span>Seguidores</span></div>
-          <div class="stat"><strong id="statSeguindo">0</strong><span>Seguindo</span></div>
+      <!-- Informações -->
+      <div class="card" style="margin-top: 18px;">
+        <div class="card-body">
+          <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📋 Informações</h5>
+          <ul class="perfil-detail" id="perfilDetalhes"></ul>
         </div>
       </div>
-    </div>
 
-    <!-- detalhes do perfil -->
-    <div class="card" style="margin-top: 18px;">
-      <div class="card-body">
-        <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📋 Informações</h5>
-        <ul class="perfil-detail" id="perfilDetalhes"></ul>
+      <!-- Habilidades -->
+      <div class="card" id="sectionSkills" style="margin-top: 18px; display:none;">
+        <div class="card-body">
+          <h5 class="perfil-section-title">💡 Habilidades</h5>
+          <div class="skill-tags" id="skillsList"></div>
+        </div>
       </div>
-    </div>
 
-    <!-- Habilidades / Skills -->
-    <div class="card perfil-section" id="sectionSkills" style="display:none;">
-      <div class="card-body">
-        <h5 class="perfil-section-title">💡 Habilidades</h5>
-        <div class="skill-tags" id="skillsList"></div>
+      <!-- Posts -->
+      <div style="margin-top: 24px;">
+        <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📸 Posts</h5>
+        <div id="meusPosts">
+          <p style="color: var(--clr-text-low); text-align:center; padding: 30px 0;">Sem posts ainda.</p>
+        </div>
       </div>
-    </div>
 
-    <!-- Experiência Profissional -->
-    <div class="card perfil-section" id="sectionExperience" style="display:none;">
-      <div class="card-body">
-        <h5 class="perfil-section-title">💼 Experiência Profissional</h5>
-        <div id="experienceList"></div>
+      <!-- Ações do próprio perfil -->
+      <div id="ownProfileActions" style="text-align: center; margin-top: 24px; display:none; gap:10px; flex-wrap:wrap; justify-content:center;">
+        <button class="btn btn-primary btn-sm" onclick="editarPerfil()">✏️ Editar Perfil</button>
+        <button class="btn btn-outline btn-sm" id="logoutBtn" style="color: var(--clr-danger); border-color: var(--clr-danger);">🚪 Sair</button>
       </div>
-    </div>
 
-    <!-- Formação / Educação -->
-    <div class="card perfil-section" id="sectionEducation" style="display:none;">
-      <div class="card-body">
-        <h5 class="perfil-section-title">🎓 Formação</h5>
-        <div id="educationList"></div>
-      </div>
     </div>
-
-    <!-- posts do usuário -->
-    <div style="margin-top: 24px;">
-      <h5 style="font-family: var(--font-head); font-weight:700; color: var(--clr-deep); margin-bottom: 14px; font-size:.92rem;">📸 Posts</h5>
-      <div id="meusPosts">
-        <p style="color: var(--clr-text-low); text-align:center; padding: 30px 0;">Sem posts ainda.</p>
-      </div>
-    </div>
-
-    <!-- Editar perfil (próprio perfil) -->
-    <div id="ownProfileActions" style="text-align: center; margin-top: 24px; display:none; gap:10px; flex-wrap:wrap; justify-content:center;">
-      <button class="btn btn-primary btn-sm" onclick="openModal('modalEditProfile')">✏️ Editar Perfil</button>
-      <button class="btn btn-outline btn-sm" id="logoutBtnDesktop" style="color: var(--clr-danger); border-color: var(--clr-danger);">
-        🚪 Sair da conta
-      </button>
-    </div>
-
   </div>
 </div>
 
-<!-- ── MODAL EDIT PROFILE ── -->
+<!-- Modal Editar Perfil -->
 <div class="modal-overlay" id="modalEditProfile">
   <div class="modal">
     <div class="modal-header">
       <h3>✏️ Editar Perfil</h3>
       <button class="modal-close" onclick="closeModal('modalEditProfile')">×</button>
     </div>
-    <div class="modal-body" style="max-height:70vh; overflow-y:auto;">
+    <div class="modal-body">
       
-      <!-- Bio / Descrição -->
+      <!-- Upload de foto -->
       <div class="form-group">
-        <label>Bio / Sobre mim</label>
-        <textarea id="editBio" placeholder="Conte um pouco sobre você..." style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: var(--font-body); font-size:.88rem; resize: vertical;"></textarea>
+        <label>Foto de Perfil</label>
+        <input type="file" id="fotoInput" accept="image/*" onchange="uploadFoto()" />
+        <p style="font-size:.75rem; color: var(--clr-text-low); margin-top:4px;">JPG, PNG ou WEBP - máx 5MB</p>
       </div>
 
-      <!-- Skills -->
+      <div class="form-group">
+        <label>Bio / Sobre mim</label>
+        <textarea id="editBio" placeholder="Conte sobre você..." style="width:100%; min-height: 80px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; resize: vertical;"></textarea>
+      </div>
+
       <div class="form-group">
         <label>Habilidades (separe por vírgula)</label>
         <input type="text" id="editSkills" placeholder="JavaScript, React, Python..." style="width:100%; padding: 10px 14px; border: 1.5px solid var(--clr-border); border-radius: 8px;" />
       </div>
 
-      <!-- Status de procura (CLT/PJ) -->
       <div class="form-group" id="editJobStatusGroup">
         <label>Status de Emprego</label>
         <select id="editJobStatus" style="width:100%; padding: 10px; border: 1.5px solid var(--clr-border); border-radius: 8px;">
@@ -137,51 +129,36 @@
         </select>
       </div>
 
-      <!-- Experiência -->
-      <div class="form-group">
-        <label>Experiência Profissional (JSON format)</label>
-        <textarea id="editExperience" placeholder='[{"cargo":"Dev Frontend","empresa":"Tech Corp","periodo":"2020-2023","descricao":"Descrição"}]' style="width:100%; min-height: 100px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: monospace; font-size:.82rem; resize: vertical;"></textarea>
-        <p style="font-size:.75rem; color: var(--clr-text-low); margin-top:4px;">Formato: array de objetos com cargo, empresa, periodo, descricao</p>
-      </div>
-
-      <!-- Educação -->
-      <div class="form-group">
-        <label>Formação / Cursos (JSON format)</label>
-        <textarea id="editEducation" placeholder='[{"curso":"Análise e Desenvolvimento","instituicao":"FIAP","ano":"2023","status":"Concluído"}]' style="width:100%; min-height: 100px; padding: 12px; border: 1.5px solid var(--clr-border); border-radius: 8px; font-family: monospace; font-size:.82rem; resize: vertical;"></textarea>
-        <p style="font-size:.75rem; color: var(--clr-text-low); margin-top:4px;">Formato: array de objetos com curso, instituicao, ano, status</p>
-      </div>
-
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost btn-sm" onclick="closeModal('modalEditProfile')">Cancelar</button>
-      <button class="btn btn-primary btn-sm" onclick="saveProfileEdits()">Salvar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarPerfil()">Salvar</button>
     </div>
   </div>
 </div>
 
-<!-- ── TOAST ── -->
 <div class="toast" id="toast"></div>
 
 <script type="module">
-  import { auth, db }           from './firebaseConfig.js';
+  import { auth, db } from './firebaseConfig.js';
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-  import { doc, getDoc, collection, getDocs, query, where, orderBy, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  import { doc, getDoc, collection, query, where, getDocs, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // ── globals ──
   let currentUser = null;
   let profileUid = null;
-  window.isOwnProfile = false;
+  let isOwnProfile = false;
+  let currentUserData = null;
 
-  // ── navbar ──
+  // Navbar
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 20));
 
   const burger = document.getElementById('burger');
-  const mMenu  = document.getElementById('mobileMenu');
+  const mMenu = document.getElementById('mobileMenu');
   burger.addEventListener('click', () => { burger.classList.toggle('open'); mMenu.classList.toggle('open'); });
   mMenu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => { burger.classList.remove('open'); mMenu.classList.remove('open'); }));
 
-  // ── toast ──
+  // Toast
   function showToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -189,83 +166,97 @@
     setTimeout(() => t.classList.remove('show'), 2600);
   }
 
-  // ── modal ──
-  window.openModal = function(id) { document.getElementById(id).classList.add('open'); };
-  window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
+  // Modal
+  window.openModal = (id) => document.getElementById(id).classList.add('open');
+  window.closeModal = (id) => document.getElementById(id).classList.remove('open');
 
-  // ── logout ──
+  // Logout
   async function doLogout() {
     try {
       await signOut(auth);
-      showToast('Você saiu da conta.');
-      setTimeout(() => { window.location.href = 'index.html'; }, 1000);
-    } catch(e) { showToast('Erro ao sair.'); }
+      showToast('Você saiu.');
+      setTimeout(() => window.location.href = 'index.html', 800);
+    } catch(e) { 
+      showToast('Erro ao sair.'); 
+    }
   }
-  document.getElementById('logoutBtnDesktop').addEventListener('click', doLogout);
-  document.getElementById('logoutBtn').addEventListener('click', doLogout);
+  
+  document.getElementById('logoutBtn')?.addEventListener('click', doLogout);
+  document.getElementById('logoutBtnMobile')?.addEventListener('click', doLogout);
 
-  // ── get uid from URL ──
+  // Get UID from URL
   const urlParams = new URLSearchParams(window.location.search);
   const uidParam = urlParams.get('uid');
 
-  // ── auth ──
+  // Auth
   onAuthStateChanged(auth, async (user) => {
     currentUser = user;
 
     if (uidParam) {
       profileUid = uidParam;
-      window.isOwnProfile = user && user.uid === uidParam;
+      isOwnProfile = user && user.uid === uidParam;
     } else if (user) {
       profileUid = user.uid;
-      window.isOwnProfile = true;
+      isOwnProfile = true;
     } else {
-      document.getElementById('nomePerfil').textContent  = 'Visitante';
-      document.getElementById('rolePerfil').textContent  = '—';
+      document.getElementById('loading').innerHTML = '<p style="color: var(--clr-text-low);">Faça <a href="login.html" style="color: var(--clr-purple);">login</a> para ver seu perfil.</p>';
       return;
     }
 
-    loadProfile(profileUid);
+    await loadProfile(profileUid);
   });
 
-  // ── load profile ──
+  // Load profile
   async function loadProfile(uid) {
     try {
-      const snap = await getDoc(doc(db, 'perfis', uid));
-      if (!snap.exists()) {
-        document.getElementById('nomePerfil').textContent = 'Usuário não encontrado';
+      console.log('Carregando perfil:', uid);
+      
+      const docRef = doc(db, 'perfis', uid);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        document.getElementById('loading').innerHTML = '<p style="color: var(--clr-danger);">❌ Usuário não encontrado.</p>';
         return;
       }
 
-      const p = snap.data();
+      const p = docSnap.data();
+      console.log('Perfil carregado:', p);
+      
+      currentUserData = p;
+
+      // Esconder loading, mostrar conteúdo
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('perfilContent').style.display = 'block';
+
+      // Avatar
       const inicial = (p.nome || 'U')[0].toUpperCase();
-
-      // avatar
+      const avatarEl = document.getElementById('avatarPerfil');
+      
       if (p.fotoURL) {
-        document.getElementById('avatarPerfil').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
-          <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />`;
+        avatarEl.innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
       } else {
-        document.getElementById('avatarPerfil').innerHTML = inicial + `<input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />`;
+        avatarEl.textContent = inicial;
       }
 
+      // Nome e role
       document.getElementById('nomePerfil').textContent = p.nome || 'Usuário';
-
       const badge = document.getElementById('rolePerfil');
-      badge.textContent = p.role;
-      badge.className   = 'role-badge ' + p.role.toLowerCase();
+      badge.textContent = p.role || '';
+      badge.className = 'role-badge ' + (p.role || '').toLowerCase();
 
-      // bio
+      // Bio
       if (p.bio) {
-        document.getElementById('descPerfil').textContent = p.bio;
+        document.getElementById('bioPerfil').textContent = p.bio;
       }
 
-      // stats
+      // Stats
       const seguidores = p.seguidores || [];
-      const seguindo   = p.seguindo || [];
+      const seguindo = p.seguindo || [];
       document.getElementById('statSeguidores').textContent = seguidores.length;
       document.getElementById('statSeguindo').textContent = seguindo.length;
 
-      // action buttons
-      if (!window.isOwnProfile && currentUser) {
+      // Botões de ação
+      if (!isOwnProfile && currentUser) {
         document.getElementById('actionButtons').style.display = 'flex';
         
         const meSnap = await getDoc(doc(db, 'perfis', currentUser.uid));
@@ -282,46 +273,44 @@
         }
       }
 
-      if (window.isOwnProfile) {
+      if (isOwnProfile) {
         document.getElementById('ownProfileActions').style.display = 'flex';
       }
 
-      // ── detalhes ──
-      const detalhes = document.getElementById('perfilDetalhes');
+      // Detalhes
       let html = '';
-
       html += `<li><span class="label">Email</span><span class="value">${p.email || '—'}</span></li>`;
       html += `<li><span class="label">Telefone</span><span class="value">${p.telefone || '—'}</span></li>`;
-      html += `<li><span class="label">Papel</span><span class="value"><span class="role-badge ${p.role.toLowerCase()}">${p.role}</span></span></li>`;
-
+      
       if (p.role === 'CLT' || p.role === 'PJ') {
         if (p.jobStatus) {
           const statusLabels = {
-            'disponivel': '🟢 Disponível para oportunidades',
+            'disponivel': '🟢 Disponível',
             'empregado': '🔵 Empregado',
-            'jovem-aprendiz': '🟡 Procurando Jovem Aprendiz',
-            'estagio': '🟠 Procurando Estágio'
+            'jovem-aprendiz': '🟡 Jovem Aprendiz',
+            'estagio': '🟠 Estágio'
           };
           html += `<li><span class="label">Status</span><span class="value">${statusLabels[p.jobStatus] || p.jobStatus}</span></li>`;
         }
       }
 
-      if (p.role === 'CLT') {
-        html += `<li><span class="label">Data de Nascimento</span><span class="value">${formatDate(p.dob) || '—'}</span></li>`;
+      if (p.role === 'CLT' && p.dob) {
+        const [y, m, d] = p.dob.split('-');
+        html += `<li><span class="label">Nascimento</span><span class="value">${d}/${m}/${y}</span></li>`;
       }
 
-      if (p.role === 'Empresa') {
-        html += `<li><span class="label">Área de Atuação</span><span class="value">${p.area || '—'}</span></li>`;
+      if (p.role === 'Empresa' && p.area) {
+        html += `<li><span class="label">Área</span><span class="value">${p.area}</span></li>`;
       }
 
-      const criado = p.criadoEm?.toDate ? p.criadoEm.toDate() : (p.criadoEm ? new Date(p.criadoEm) : null);
-      if (criado) {
+      if (p.criadoEm) {
+        const criado = p.criadoEm.toDate ? p.criadoEm.toDate() : new Date(p.criadoEm);
         html += `<li><span class="label">Membro desde</span><span class="value">${criado.toLocaleDateString('pt-BR')}</span></li>`;
       }
 
-      detalhes.innerHTML = html;
+      document.getElementById('perfilDetalhes').innerHTML = html;
 
-      // ── skills ──
+      // Skills
       if (p.skills && p.skills.length) {
         document.getElementById('sectionSkills').style.display = 'block';
         document.getElementById('skillsList').innerHTML = p.skills.map(s => 
@@ -329,39 +318,30 @@
         ).join('');
       }
 
-      // ── experiencia ──
-      if (p.experience && p.experience.length) {
-        document.getElementById('sectionExperience').style.display = 'block';
-        document.getElementById('experienceList').innerHTML = p.experience.map(exp => `
-          <div class="perfil-item">
-            <div class="perfil-item-title">${exp.cargo}</div>
-            <div class="perfil-item-subtitle">${exp.empresa} • ${exp.periodo}</div>
-            ${exp.descricao ? `<div class="perfil-item-description">${exp.descricao}</div>` : ''}
-          </div>
-        `).join('');
-      }
-
-      // ── educação ──
-      if (p.education && p.education.length) {
-        document.getElementById('sectionEducation').style.display = 'block';
-        document.getElementById('educationList').innerHTML = p.education.map(edu => `
-          <div class="perfil-item">
-            <div class="perfil-item-title">${edu.curso}</div>
-            <div class="perfil-item-subtitle">${edu.instituicao} • ${edu.ano} • ${edu.status}</div>
-          </div>
-        `).join('');
-      }
-
-      // ── posts ──
+      // Posts - OTIMIZADO: limite de 10 posts
       try {
-        const q = query(collection(db, 'posts'), where('userId', '==', uid), orderBy('criadoEm', 'desc'));
-        const posts = await getDocs(q);
+        const q = query(
+          collection(db, 'posts'), 
+          where('userId', '==', uid)
+        );
+        const postsSnap = await getDocs(q);
+        
+        const posts = [];
+        postsSnap.forEach(d => posts.push({ id: d.id, ...d.data() }));
+        
+        // Ordenar por data (mais recentes primeiro)
+        posts.sort((a, b) => {
+          const dateA = a.criadoEm?.toDate ? a.criadoEm.toDate() : new Date(a.criadoEm);
+          const dateB = b.criadoEm?.toDate ? b.criadoEm.toDate() : new Date(b.criadoEm);
+          return dateB - dateA;
+        });
+
+        document.getElementById('statPosts').textContent = posts.length;
+
         const container = document.getElementById('meusPosts');
 
-        document.getElementById('statPosts').textContent = posts.size;
-
-        if (posts.empty) {
-          if (window.isOwnProfile) {
+        if (!posts.length) {
+          if (isOwnProfile) {
             container.innerHTML = '<p style="color: var(--clr-text-low); text-align:center; padding: 28px 0;">Você ainda não fez posts. <a href="postar.html" style="color: var(--clr-purple); font-weight:600;">Criar agora</a></p>';
           } else {
             container.innerHTML = '<p style="color: var(--clr-text-low); text-align:center; padding: 28px 0;">Sem posts ainda.</p>';
@@ -370,8 +350,9 @@
         }
 
         container.innerHTML = '';
-        posts.forEach(d => {
-          const post = d.data();
+        
+        // Mostrar apenas os 10 primeiros posts
+        posts.slice(0, 10).forEach(post => {
           const card = document.createElement('div');
           card.className = 'card post-card anim-up';
 
@@ -387,6 +368,7 @@
             : inicial;
 
           const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
+          
           card.innerHTML = `
             <div class="post-header">
               <div class="avatar avatar-sm">${avatarHTML}</div>
@@ -400,52 +382,65 @@
           `;
           container.appendChild(card);
         });
-      } catch(e) { console.error(e); }
 
-      // ── populate edit modal if own profile ──
-      if (window.isOwnProfile) {
-        document.getElementById('editBio').value = p.bio || '';
-        document.getElementById('editSkills').value = (p.skills || []).join(', ');
-        document.getElementById('editJobStatus').value = p.jobStatus || '';
-        document.getElementById('editExperience').value = JSON.stringify(p.experience || [], null, 2);
-        document.getElementById('editEducation').value = JSON.stringify(p.education || [], null, 2);
-
-        // hide job status for empresa
-        if (p.role === 'Empresa') {
-          document.getElementById('editJobStatusGroup').style.display = 'none';
+        if (posts.length > 10) {
+          const moreMsg = document.createElement('p');
+          moreMsg.style.cssText = 'text-align:center; color: var(--clr-text-low); margin-top:20px; font-size:.85rem;';
+          moreMsg.textContent = `+ ${posts.length - 10} posts mais antigos`;
+          container.appendChild(moreMsg);
         }
+
+      } catch(e) { 
+        console.error('Erro ao carregar posts:', e); 
       }
 
     } catch(e) {
-      console.error(e);
-      showToast('Erro ao carregar perfil');
+      console.error('Erro ao carregar perfil:', e);
+      document.getElementById('loading').innerHTML = '<p style="color: var(--clr-danger);">❌ Erro ao carregar perfil.</p>';
     }
   }
 
-  // ── upload profile photo ──
-  window.uploadProfilePhoto = async function(e) {
-    if (!window.isOwnProfile) return;
+  // Editar perfil
+  window.editarPerfil = () => {
+    if (!currentUserData) return;
+    
+    document.getElementById('editBio').value = currentUserData.bio || '';
+    document.getElementById('editSkills').value = (currentUserData.skills || []).join(', ');
+    document.getElementById('editJobStatus').value = currentUserData.jobStatus || '';
+    
+    if (currentUserData.role === 'Empresa') {
+      document.getElementById('editJobStatusGroup').style.display = 'none';
+    }
+    
+    openModal('modalEditProfile');
+  };
 
-    const file = e.target.files[0];
+  // Upload foto
+  window.uploadFoto = async () => {
+    const file = document.getElementById('fotoInput').files[0];
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      showToast('Imagem muito grande. Máximo 5MB.');
+      showToast('Imagem muito grande (máx 5MB)');
       return;
     }
 
     try {
-      const apiKey  = '609de06a58faae929e0c98224957cc60';
+      showToast('Enviando foto...');
+      
+      const apiKey = '609de06a58faae929e0c98224957cc60';
       const formData = new FormData();
       formData.append('image', file);
 
-      const res  = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { 
+        method: 'POST', 
+        body: formData 
+      });
       const data = await res.json();
       
       if (!data.success) throw new Error('Upload falhou');
 
-      const fotoURL = data.data.url;
-      await updateDoc(doc(db, 'perfis', currentUser.uid), { fotoURL });
+      await updateDoc(doc(db, 'perfis', currentUser.uid), { fotoURL: data.data.url });
 
       showToast('Foto atualizada!');
       setTimeout(() => location.reload(), 1000);
@@ -455,43 +450,32 @@
     }
   };
 
-  // ── save profile edits ──
-  window.saveProfileEdits = async function() {
-    if (!window.isOwnProfile) return;
+  // Salvar perfil
+  window.salvarPerfil = async () => {
+    if (!isOwnProfile) return;
 
     try {
       const bio = document.getElementById('editBio').value.trim();
       const skills = document.getElementById('editSkills').value.split(',').map(s => s.trim()).filter(Boolean);
       const jobStatus = document.getElementById('editJobStatus').value;
-      
-      let experience, education;
-      try {
-        experience = JSON.parse(document.getElementById('editExperience').value || '[]');
-        education = JSON.parse(document.getElementById('editEducation').value || '[]');
-      } catch(e) {
-        showToast('Formato JSON inválido em Experiência ou Formação');
-        return;
-      }
 
       await updateDoc(doc(db, 'perfis', currentUser.uid), {
         bio,
         skills,
-        jobStatus,
-        experience,
-        education
+        jobStatus
       });
 
       closeModal('modalEditProfile');
       showToast('Perfil atualizado!');
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 800);
     } catch(e) {
       console.error(e);
       showToast('Erro ao salvar');
     }
   };
 
-  // ── toggle follow ──
-  window.toggleFollow = async function() {
+  // Toggle follow
+  window.toggleFollow = async () => {
     if (!currentUser) return;
 
     try {
@@ -505,22 +489,22 @@
       if (isFollowing) {
         await updateDoc(meRef, { seguindo: arrayRemove(profileUid) });
         await updateDoc(targetRef, { seguidores: arrayRemove(currentUser.uid) });
-        showToast('Você deixou de seguir');
+        showToast('Deixou de seguir');
       } else {
         await updateDoc(meRef, { seguindo: arrayUnion(profileUid) });
         await updateDoc(targetRef, { seguidores: arrayUnion(currentUser.uid) });
-        showToast('Você está seguindo!');
+        showToast('Seguindo!');
       }
 
-      loadProfile(profileUid);
+      setTimeout(() => location.reload(), 800);
     } catch(e) {
       console.error(e);
       showToast('Erro ao seguir');
     }
   };
 
-  // ── contact user ──
-  window.contactUser = async function() {
+  // Contact
+  window.contactUser = async () => {
     const snap = await getDoc(doc(db, 'perfis', profileUid));
     if (!snap.exists()) return;
     
@@ -530,15 +514,9 @@
     } else if (p.telefone) {
       showToast(`Telefone: ${p.telefone}`);
     } else {
-      showToast('Informações de contato não disponíveis');
+      showToast('Sem informações de contato');
     }
   };
-
-  function formatDate(str) {
-    if (!str) return null;
-    const [y, m, d] = str.split('-');
-    return `${d}/${m}/${y}`;
-  }
 </script>
 </body>
 </html>
