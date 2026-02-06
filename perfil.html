@@ -32,8 +32,9 @@
     <!-- perfil hero -->
     <div class="card">
       <div class="perfil-hero" id="perfilHero">
-        <div class="avatar avatar-xl avatar-upload" id="avatarPerfil" onclick="isOwnProfile && document.getElementById('photoUpload').click()">U
-          <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />
+        <div class="avatar avatar-xl avatar-upload" id="avatarPerfil">
+          <span id="avatarContent">U</span>
+          <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" style="display:none;" />
         </div>
         <h2 id="nomePerfil">Usuário</h2>
         <span class="role-badge clt" id="rolePerfil">CLT</span><br>
@@ -164,6 +165,7 @@
 
 <script type="module">
   import { auth, db }           from './firebaseConfig.js';
+  import { escapeHTML, uploadToImgBB } from './utils.js';
   import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { doc, getDoc, collection, getDocs, query, where, orderBy, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -239,12 +241,27 @@
       const p = snap.data();
       const inicial = (p.nome || 'U')[0].toUpperCase();
 
-      // avatar
+      // avatar (manipulamos apenas o conteúdo do avatarContent e não recriamos o input)
+      const avatarContent = document.getElementById('avatarContent');
       if (p.fotoURL) {
-        document.getElementById('avatarPerfil').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />
-          <input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />`;
+        // create or replace img inside avatarContent
+        let img = avatarContent.querySelector('img');
+        if (!img) {
+          img = document.createElement('img');
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.borderRadius = '50%';
+          avatarContent.textContent = '';
+          avatarContent.appendChild(img);
+        }
+        img.src = p.fotoURL;
+        img.alt = p.nome || 'Avatar';
       } else {
-        document.getElementById('avatarPerfil').innerHTML = inicial + `<input type="file" id="photoUpload" accept="image/*" onchange="uploadProfilePhoto(event)" />`;
+        // remove img if present; show inicial
+        const img = avatarContent.querySelector('img');
+        if (img) img.remove();
+        avatarContent.textContent = inicial;
       }
 
       document.getElementById('nomePerfil').textContent = p.nome || 'Usuário';
@@ -256,6 +273,8 @@
       // bio
       if (p.bio) {
         document.getElementById('descPerfil').textContent = p.bio;
+      } else {
+        document.getElementById('descPerfil').textContent = '';
       }
 
       // stats
@@ -290,9 +309,9 @@
       const detalhes = document.getElementById('perfilDetalhes');
       let html = '';
 
-      html += `<li><span class="label">Email</span><span class="value">${p.email || '—'}</span></li>`;
-      html += `<li><span class="label">Telefone</span><span class="value">${p.telefone || '—'}</span></li>`;
-      html += `<li><span class="label">Papel</span><span class="value"><span class="role-badge ${p.role.toLowerCase()}">${p.role}</span></span></li>`;
+      html += `<li><span class="label">Email</span><span class="value">${escapeHTML(p.email || '—')}</span></li>`;
+      html += `<li><span class="label">Telefone</span><span class="value">${escapeHTML(p.telefone || '—')}</span></li>`;
+      html += `<li><span class="label">Papel</span><span class="value"><span class="role-badge ${escapeHTML((p.role||'').toLowerCase())}">${escapeHTML(p.role)}</span></span></li>`;
 
       if (p.role === 'CLT' || p.role === 'PJ') {
         if (p.jobStatus) {
@@ -302,21 +321,21 @@
             'jovem-aprendiz': '🟡 Procurando Jovem Aprendiz',
             'estagio': '🟠 Procurando Estágio'
           };
-          html += `<li><span class="label">Status</span><span class="value">${statusLabels[p.jobStatus] || p.jobStatus}</span></li>`;
+          html += `<li><span class="label">Status</span><span class="value">${escapeHTML(statusLabels[p.jobStatus] || p.jobStatus)}</span></li>`;
         }
       }
 
       if (p.role === 'CLT') {
-        html += `<li><span class="label">Data de Nascimento</span><span class="value">${formatDate(p.dob) || '—'}</span></li>`;
+        html += `<li><span class="label">Data de Nascimento</span><span class="value">${escapeHTML(formatDate(p.dob) || '—')}</span></li>`;
       }
 
       if (p.role === 'Empresa') {
-        html += `<li><span class="label">Área de Atuação</span><span class="value">${p.area || '—'}</span></li>`;
+        html += `<li><span class="label">Área de Atuação</span><span class="value">${escapeHTML(p.area || '—')}</span></li>`;
       }
 
       const criado = p.criadoEm?.toDate ? p.criadoEm.toDate() : (p.criadoEm ? new Date(p.criadoEm) : null);
       if (criado) {
-        html += `<li><span class="label">Membro desde</span><span class="value">${criado.toLocaleDateString('pt-BR')}</span></li>`;
+        html += `<li><span class="label">Membro desde</span><span class="value">${escapeHTML(criado.toLocaleDateString('pt-BR'))}</span></li>`;
       }
 
       detalhes.innerHTML = html;
@@ -325,7 +344,7 @@
       if (p.skills && p.skills.length) {
         document.getElementById('sectionSkills').style.display = 'block';
         document.getElementById('skillsList').innerHTML = p.skills.map(s => 
-          `<span class="skill-tag">${s}</span>`
+          `<span class="skill-tag">${escapeHTML(s)}</span>`
         ).join('');
       }
 
@@ -334,9 +353,9 @@
         document.getElementById('sectionExperience').style.display = 'block';
         document.getElementById('experienceList').innerHTML = p.experience.map(exp => `
           <div class="perfil-item">
-            <div class="perfil-item-title">${exp.cargo}</div>
-            <div class="perfil-item-subtitle">${exp.empresa} • ${exp.periodo}</div>
-            ${exp.descricao ? `<div class="perfil-item-description">${exp.descricao}</div>` : ''}
+            <div class="perfil-item-title">${escapeHTML(exp.cargo)}</div>
+            <div class="perfil-item-subtitle">${escapeHTML(exp.empresa)} • ${escapeHTML(exp.periodo)}</div>
+            ${exp.descricao ? `<div class="perfil-item-description">${escapeHTML(exp.descricao)}</div>` : ''}
           </div>
         `).join('');
       }
@@ -346,8 +365,8 @@
         document.getElementById('sectionEducation').style.display = 'block';
         document.getElementById('educationList').innerHTML = p.education.map(edu => `
           <div class="perfil-item">
-            <div class="perfil-item-title">${edu.curso}</div>
-            <div class="perfil-item-subtitle">${edu.instituicao} • ${edu.ano} • ${edu.status}</div>
+            <div class="perfil-item-title">${escapeHTML(edu.curso)}</div>
+            <div class="perfil-item-subtitle">${escapeHTML(edu.instituicao)} • ${escapeHTML(edu.ano)} • ${escapeHTML(edu.status)}</div>
           </div>
         `).join('');
       }
@@ -378,24 +397,24 @@
           let mediaHTML = '';
           if (post.mediaURL) {
             mediaHTML = post.mediaType === 'video'
-              ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}"></video></div>`
-              : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
+              ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${escapeHTML(post.mediaURL)}"></video></div>`
+              : `<div class="post-media-wrap"><img class="post-media" src="${escapeHTML(post.mediaURL)}" alt="Mídia" /></div>`;
           }
 
           const avatarHTML = p.fotoURL 
-            ? `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
-            : inicial;
+            ? `<img src="${escapeHTML(p.fotoURL)}" alt="${escapeHTML(p.nome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+            : escapeHTML((p.nome || 'U')[0].toUpperCase());
 
           const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
           card.innerHTML = `
             <div class="post-header">
               <div class="avatar avatar-sm">${avatarHTML}</div>
               <div class="post-info">
-                <h4>${p.nome}</h4>
-                <span>${criadoEm.toLocaleDateString('pt-BR')}</span>
+                <h4>${escapeHTML(p.nome)}</h4>
+                <span>${criadoEm ? escapeHTML(criadoEm.toLocaleDateString('pt-BR')) : ''}</span>
               </div>
             </div>
-            ${post.texto ? `<div class="post-body">${post.texto}</div>` : ''}
+            ${post.texto ? `<div class="post-body">${escapeHTML(post.texto)}</div>` : ''}
             ${mediaHTML}
           `;
           container.appendChild(card);
@@ -413,6 +432,8 @@
         // hide job status for empresa
         if (p.role === 'Empresa') {
           document.getElementById('editJobStatusGroup').style.display = 'none';
+        } else {
+          document.getElementById('editJobStatusGroup').style.display = '';
         }
       }
 
@@ -435,16 +456,9 @@
     }
 
     try {
-      const apiKey  = '609de06a58faae929e0c98224957cc60';
-      const formData = new FormData();
-      formData.append('image', file);
+      // Use central helper (utils) to upload (it still uses ImgBB)
+      const fotoURL = await uploadToImgBB(file);
 
-      const res  = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
-      const data = await res.json();
-      
-      if (!data.success) throw new Error('Upload falhou');
-
-      const fotoURL = data.data.url;
       await updateDoc(doc(db, 'perfis', currentUser.uid), { fotoURL });
 
       showToast('Foto atualizada!');

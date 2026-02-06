@@ -155,6 +155,7 @@
 
 <script type="module">
   import { auth, db } from './firebaseConfig.js';
+  import { escapeHTML } from './utils.js';
   import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   import { collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, query, orderBy, increment, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -245,8 +246,8 @@
 
         const inicial = (p.nome || 'U')[0].toUpperCase();
         if (p.fotoURL) {
-          document.getElementById('avatarSidebar').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
-          document.getElementById('avatarQuick').innerHTML = `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+          document.getElementById('avatarSidebar').innerHTML = `<img src="${escapeHTML(p.fotoURL)}" alt="${escapeHTML(p.nome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
+          document.getElementById('avatarQuick').innerHTML = `<img src="${escapeHTML(p.fotoURL)}" alt="${escapeHTML(p.nome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`;
         } else {
           document.getElementById('avatarSidebar').textContent = inicial;
           document.getElementById('avatarQuick').textContent = inicial;
@@ -291,18 +292,18 @@
     }
 
     container.innerHTML = results.map(p => {
-      const inicial = (p.nome || 'U')[0].toUpperCase();
+      const inicial = escapeHTML((p.nome || 'U')[0].toUpperCase());
       const avatarHTML = p.fotoURL 
-        ? `<img src="${p.fotoURL}" alt="${p.nome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+        ? `<img src="${escapeHTML(p.fotoURL)}" alt="${escapeHTML(p.nome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
         : inicial;
       
       return `
-        <div class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${p.uid}'" 
+        <div class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${encodeURIComponent(p.uid)}'" 
              style="display:flex; gap:10px; align-items:center; padding: 8px; border-radius: 8px; transition: background .2s; margin-bottom: 4px;">
           <div class="avatar avatar-sm">${avatarHTML}</div>
           <div style="flex:1; min-width:0;">
-            <div style="font-weight:600; font-size:.82rem; color: var(--clr-deep); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.nome}</div>
-            <div style="font-size:.72rem; color: var(--clr-text-low);">${p.role}</div>
+            <div style="font-weight:600; font-size:.82rem; color: var(--clr-deep); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHTML(p.nome)}</div>
+            <div style="font-size:.72rem; color: var(--clr-text-low);">${escapeHTML(p.role)}</div>
           </div>
         </div>
       `;
@@ -364,21 +365,21 @@
     const nomeAutor = autor ? autor.nome : 'Usuário';
     const roleAutor = autor ? autor.role : '';
     const fotoAutor = autor?.fotoURL;
-    const inicial = nomeAutor[0].toUpperCase();
+    const inicial = escapeHTML((nomeAutor || 'U')[0].toUpperCase());
 
-    const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : new Date(post.criadoEm);
+    const criadoEm = post.criadoEm?.toDate ? post.criadoEm.toDate() : (post.criadoEm ? new Date(post.criadoEm) : new Date());
     const horasAtras = Math.round((Date.now() - criadoEm) / 3.6e6);
     const timeLabel = horasAtras < 1 ? 'agora' : horasAtras < 24 ? horasAtras + 'h' : Math.floor(horasAtras/24) + 'd';
 
     const avatarHTML = fotoAutor
-      ? `<img src="${fotoAutor}" alt="${nomeAutor}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+      ? `<img src="${escapeHTML(fotoAutor)}" alt="${escapeHTML(nomeAutor)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
       : inicial;
 
     let mediaHTML = '';
     if (post.mediaURL) {
       mediaHTML = post.mediaType === 'video'
-        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${post.mediaURL}"></video></div>`
-        : `<div class="post-media-wrap"><img class="post-media" src="${post.mediaURL}" alt="Mídia" /></div>`;
+        ? `<div class="post-media-wrap"><video controls playsinline preload="metadata"><source src="${escapeHTML(post.mediaURL)}"></video></div>`
+        : `<div class="post-media-wrap"><img class="post-media" src="${escapeHTML(post.mediaURL)}" alt="Mídia" /></div>`;
     }
 
     const likes = post.likes || 0;
@@ -394,10 +395,10 @@
 
     postEl.innerHTML = `
       <div class="post-header">
-        <div class="avatar avatar-sm cursor-pointer" onclick="window.location.href='perfil.html?uid=${post.userId}'">${avatarHTML}</div>
+        <div class="avatar avatar-sm cursor-pointer" onclick="window.location.href='perfil.html?uid=${encodeURIComponent(post.userId)}'">${avatarHTML}</div>
         <div class="post-info" style="flex:1;">
-          <h4 class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${post.userId}'">${nomeAutor} <span class="role-badge ${roleAutor.toLowerCase()}">${roleAutor}</span></h4>
-          <span>${timeLabel}</span>
+          <h4 class="cursor-pointer" onclick="window.location.href='perfil.html?uid=${encodeURIComponent(post.userId)}'">${escapeHTML(nomeAutor)} <span class="role-badge ${escapeHTML(roleAutor.toLowerCase())}">${escapeHTML(roleAutor)}</span></h4>
+          <span>${escapeHTML(timeLabel)}</span>
         </div>
         <div class="post-options">
           <button class="post-options-btn" onclick="togglePostMenu('${post.id}')">⋮</button>
@@ -411,7 +412,7 @@
           </div>
         </div>
       </div>
-      ${post.texto ? `<div class="post-body">${post.texto}</div>` : ''}
+      ${post.texto ? `<div class="post-body">${escapeHTML(post.texto)}</div>` : ''}
       ${mediaHTML}
       <div class="post-actions">
         <button class="post-like-btn ${isLiked ? 'active' : ''}" data-post-id="${post.id}" onclick="toggleLike('${post.id}', this)">
@@ -439,15 +440,15 @@
     if (!comments || !comments.length) return '<p style="font-size:.82rem; color: var(--clr-text-low); padding:8px 0;">Sem comentários.</p>';
     
     return comments.map((c, idx) => {
-      const time = c.criadoEm?.toDate ? c.criadoEm.toDate() : new Date(c.criadoEm);
+      const time = c.criadoEm?.toDate ? c.criadoEm.toDate() : (c.criadoEm ? new Date(c.criadoEm) : new Date());
       const timeAgo = Math.round((Date.now() - time) / 3.6e6);
       const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
       
       // Get author profile from cache for avatar
       const autorProfile = profilesCache[c.autorId];
-      const inicial = (c.autorNome || 'U')[0].toUpperCase();
+      const inicial = escapeHTML(((c.autorNome || 'U')[0] || 'U').toUpperCase());
       const avatarHTML = autorProfile?.fotoURL 
-        ? `<img src="${autorProfile.fotoURL}" alt="${c.autorNome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+        ? `<img src="${escapeHTML(autorProfile.fotoURL)}" alt="${escapeHTML(c.autorNome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
         : inicial;
 
       const commentLikes = c.likes || 0;
@@ -462,17 +463,17 @@
           <div class="avatar avatar-sm">${avatarHTML}</div>
           <div class="comment-body">
             <div class="comment-author">
-              ${c.autorNome || 'Usuário'}
+              ${escapeHTML(c.autorNome || 'Usuário')}
               ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
             </div>
-            <div class="comment-text">${c.texto}</div>
+            <div class="comment-text">${escapeHTML(c.texto)}</div>
             <div class="comment-actions">
               <button class="comment-action-btn ${isCommentLiked ? 'liked' : ''}" onclick="toggleCommentLike('${postId}', ${idx}, this)">
                 ${isCommentLiked ? '❤️' : '👍'} ${commentLikes > 0 ? commentLikes : 'Curtir'}
               </button>
               <button class="comment-action-btn" onclick="replyToComment('${postId}', ${idx})">↩️ Responder</button>
               ${!isPostAuthor && currentUser ? `<button class="comment-action-btn" onclick="reportComment('${postId}', ${idx})">⚠️ Denunciar</button>` : ''}
-              <span class="comment-time">${timeLabel}</span>
+              <span class="comment-time">${escapeHTML(timeLabel)}</span>
             </div>
             ${replies.length > 0 ? `<div class="comment-replies">${renderReplies(replies, postId, idx, postAuthorId)}</div>` : ''}
           </div>
@@ -485,15 +486,15 @@
 
   function renderReplies(replies, postId, commentIdx, postAuthorId) {
     return replies.map((r, rIdx) => {
-      const time = r.criadoEm?.toDate ? r.criadoEm.toDate() : new Date(r.criadoEm);
+      const time = r.criadoEm?.toDate ? r.criadoEm.toDate() : (r.criadoEm ? new Date(r.criadoEm) : new Date());
       const timeAgo = Math.round((Date.now() - time) / 3.6e6);
       const timeLabel = timeAgo < 1 ? 'agora' : timeAgo < 24 ? timeAgo + 'h' : Math.floor(timeAgo/24) + 'd';
       
       // Get author profile from cache for avatar in replies
       const autorProfile = profilesCache[r.autorId];
-      const inicial = (r.autorNome || 'U')[0].toUpperCase();
+      const inicial = escapeHTML(((r.autorNome || 'U')[0] || 'U').toUpperCase());
       const avatarHTML = autorProfile?.fotoURL 
-        ? `<img src="${autorProfile.fotoURL}" alt="${r.autorNome}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
+        ? `<img src="${escapeHTML(autorProfile.fotoURL)}" alt="${escapeHTML(r.autorNome)}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;" />`
         : inicial;
       
       const isPostAuthor = r.autorId === postAuthorId;
@@ -503,11 +504,11 @@
           <div class="avatar avatar-sm">${avatarHTML}</div>
           <div class="comment-body">
             <div class="comment-author">
-              ${r.autorNome || 'Usuário'}
+              ${escapeHTML(r.autorNome || 'Usuário')}
               ${isPostAuthor ? '<span class="author-badge">Autor</span>' : ''}
             </div>
-            <div class="comment-text">${r.texto}</div>
-            <span class="comment-time">${timeLabel}</span>
+            <div class="comment-text">${escapeHTML(r.texto)}</div>
+            <span class="comment-time">${escapeHTML(timeLabel)}</span>
           </div>
         </div>
       `;

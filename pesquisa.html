@@ -91,6 +91,7 @@
 
 <script type="module">
   import { db } from './firebaseConfig.js';
+  import { escapeHTML } from './utils.js';
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
   // ── navbar scroll ──
@@ -164,14 +165,14 @@
     }
 
     list.forEach(p => {
-      const inicial = (p.nome || 'U')[0].toUpperCase();
+      const inicial = escapeHTML((p.nome || 'U')[0].toUpperCase());
       const card = document.createElement('div');
       card.className = 'card result-card anim-up';
       card.innerHTML = `
         <div class="avatar">${inicial}</div>
         <div class="result-info">
-          <h4>${p.nome || 'Usuário'} <span class="role-badge ${(p.role||'').toLowerCase()}">${p.role||''}</span></h4>
-          <p>${p.area ? '📌 ' + p.area : p.role === 'CLT' || p.role === 'PJ' ? '👤 Profissional' : '🏢 Empresa'} &nbsp;·&nbsp; ${p.email || ''}</p>
+          <h4>${escapeHTML(p.nome || 'Usuário')} <span class="role-badge ${escapeHTML((p.role||'').toLowerCase())}">${escapeHTML(p.role||'')}</span></h4>
+          <p>${p.area ? '📌 ' + escapeHTML(p.area) : (p.role === 'CLT' || p.role === 'PJ' ? '👤 Profissional' : '🏢 Empresa')} &nbsp;·&nbsp; ${escapeHTML(p.email || '')}</p>
         </div>
         <button class="btn btn-outline btn-sm" onclick="showToast('📨 Mensagem enviada!')">Contato</button>
       `;

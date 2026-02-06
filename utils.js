@@ -52,6 +52,8 @@ export function maskTelefone(value) {
 }
 
 // ── Upload image to ImgBB ──
+// NOTE: This helper still calls ImgBB directly. For production, move
+// the API key to a secure backend endpoint and call that endpoint from the client.
 export async function uploadToImgBB(file) {
   const apiKey = '609de06a58faae929e0c98224957cc60';
   const formData = new FormData();
@@ -65,4 +67,15 @@ export async function uploadToImgBB(file) {
   const data = await response.json();
   if (data.success) return data.data.url;
   throw new Error('Falha ao enviar imagem');
+}
+
+// ── Escape HTML to prevent XSS ──
+export function escapeHTML(str) {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
